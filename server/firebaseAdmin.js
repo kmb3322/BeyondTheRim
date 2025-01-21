@@ -13,6 +13,7 @@ admin.initializeApp({
   }),
 });
 
+
 const db = admin.firestore();
 const authAdmin = admin.auth();
 
