@@ -4,8 +4,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { S3Client } = require('@aws-sdk/client-s3');
-const { Upload } = require('@aws-sdk/lib-storage');
+const { PutObjectCommand, S3Client } = require('@aws-sdk/client-s3');
 const { runAnalysis } = require('./analysis');
 const { db, authAdmin } = require('./firebaseAdmin');
 
@@ -16,14 +15,15 @@ if (process.env.NODE_ENV !== 'production') {
 
 const app = express();
 
+// 미들웨어
 app.use(cors());
 app.use(express.json());
 
-// multer 설정: production 시 '/tmp', 로컬은 server/uploads 폴더 사용
+// multer: 업로드 폴더는 Vercel 환경에서는 /tmp 사용, 로컬에서는 server/uploads 사용
 const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, 'uploads');
 const upload = multer({ dest: uploadDir });
 
-// Health-check 엔드포인트
+// Health-check 엔드포인트 추가
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -35,15 +35,15 @@ async function verifyAuthToken(req, res, next) {
   try {
     const header = req.headers.authorization;
     if (!header || !header.startsWith('Bearer ')) {
-      return res.status(401).json({ message: '토큰이 존재하지 않습니다.' });
+      return res.status(401).json({ message: 'No token found' });
     }
     const token = header.split(' ')[1];
     const decodedToken = await authAdmin.verifyIdToken(token);
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error('토큰 검증 에러:', error);
-    res.status(401).json({ message: '유효하지 않은 토큰입니다.' });
+    console.error('Token verification error:', error);
+    res.status(401).json({ message: 'Invalid token' });
   }
 }
 
@@ -53,10 +53,9 @@ async function verifyAuthToken(req, res, next) {
 app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: '업로드된 파일이 없습니다.' });
+      return res.status(400).json({ message: 'No file uploaded' });
     }
-
-    // S3에 업로드할 Key 생성 (예: videos/타임스탬프_원본파일명)
+    // S3에 업로드할 Key 생성
     const originalName = path.basename(req.file.originalname);
     const s3Key = `videos/${Date.now()}_${originalName}`;
 
@@ -71,39 +70,21 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 
     // 파일 스트림 생성
     const fileStream = fs.createReadStream(req.file.path);
-
-    // @aws-sdk/lib-storage의 Upload 클래스를 사용하여 스트림 업로드
-    const uploadParams = {
-      client: s3,
-      params: {
-        Bucket: process.env.S3_BUCKET_NAME,
-        Key: s3Key,
-        Body: fileStream,
-        ContentType: req.file.mimetype || 'video/mp4',
-      },
-    };
-
-    const parallelUploads3 = new Upload(uploadParams);
-
-    // 업로드 진행 상황 로깅 (선택사항)
-    parallelUploads3.on('httpUploadProgress', (progress) => {
-      console.log('업로드 진행 중:', progress);
+    const putCmd = new PutObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: s3Key,
+      Body: fileStream,
+      ContentType: req.file.mimetype || 'video/mp4',
     });
+    await s3.send(putCmd);
 
-    // 업로드 완료 대기
-    await parallelUploads3.done();
-
-    // 업로드 완료 후 임시 파일 삭제
+    // 임시 파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 영상 분석 수행 (runAnalysis 함수 내 구현)
-    console.log(`Running ML analysis on file: ${s3Key}`);
+    // 영상 분석 수행
     const analysisResult = await runAnalysis(s3Key);
 
-    // analysisResult.processedUrl가 undefined인 경우 null을 할당
-    const processedUrl = analysisResult.processedUrl !== undefined ? analysisResult.processedUrl : null;
-
-    // Firestore에 기록
+    // Firestore 기록
     const newDocRef = db
       .collection('users')
       .doc(req.user.uid)
@@ -113,18 +94,18 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
     await newDocRef.set({
       s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
       score: analysisResult.score,
-      processed: processedUrl,
+      processed: analysisResult.processedUrl,
       createdAt: new Date(),
     });
 
     res.json({
-      message: '업로드 및 분석 성공',
+      message: 'Upload & analysis success',
       s3Key,
       analysisResult,
     });
   } catch (err) {
-    console.error('업로드 엔드포인트 에러:', err);
-    res.status(500).json({ message: '서버 에러' });
+    console.error('Upload endpoint error:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -133,27 +114,27 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
  * 클라이언트는 헤더에 Firebase 토큰을 넣어서 GET /api/user-shots 요청
  */
 app.get('/api/user-shots', verifyAuthToken, async (req, res) => {
-  try {
-    const userId = req.user.uid;
+    try {
+      const userId = req.user.uid;
+  
+      const shotsRef = db
+        .collection('users')
+        .doc(userId)
+        .collection('shots')
+        .orderBy('createdAt', 'asc');
+  
+      const snapshot = await shotsRef.get();
+      const shots = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      return res.json({ shots });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Failed to fetch user shots' });
+    }
+  });
 
-    // Firestore에서 해당 유저의 shots 컬렉션을 createdAt 기준 오름차순으로 가져옴
-    const shotsRef = db
-      .collection('users')
-      .doc(userId)
-      .collection('shots')
-      .orderBy('createdAt', 'asc');
-
-    const snapshot = await shotsRef.get();
-    const shots = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    res.json({ shots });
-  } catch (error) {
-    console.error('유저 샷 조회 에러:', error);
-    res.status(500).json({ message: '유저 샷 조회 실패' });
-  }
-});
-
+  
 module.exports = app;
