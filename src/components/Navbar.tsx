@@ -109,17 +109,21 @@ export default function Navbar({ headerType = 'header1' }: NavbarProps) {
             user && (
               <>
                 <Link to="/upload">
-                  <Button colorScheme="red" fontFamily="Noto Sans KR" variant="outline" zIndex={9999}>
+                  <Button colorScheme="#f33c3c" borderColor="#f33c3c" color="#f33c3c" fontFamily="Noto Sans KR" variant="outline" zIndex={9999}
+                 _hover={{
+                  color:"black",
+                   bg: "#f33c3c", // 커서 올렸을 때의 배경색
+                   transform: "scale(1.02)", // 약간 확대 효과
+                 }}>
                     업로드
                   </Button>
                 </Link>
-                <Button
-                zIndex={9999}
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={handleLogout}
-                  fontFamily="Noto Sans KR"
-                >
+                <Button colorScheme="#f33c3c" borderColor="#f33c3c" color="#f33c3c" fontFamily="Noto Sans KR" variant="outline" zIndex={9999}
+                 _hover={{
+                  color:"black",
+                   bg: "#f33c3c", // 커서 올렸을 때의 배경색
+                   transform: "scale(1.02)", // 약간 확대 효과
+                 }}>
                   로그아웃
                 </Button>
               </>

@@ -71,7 +71,8 @@ export default function IntroVideoPage() {
           <Button
             borderRadius={12}
             width="320px"
-            colorScheme="red"
+            colorScheme="#f33c3c"
+            bg="#f33c3c"
             onClick={handleStart}
             fontWeight={700}
             textColor={'white'}

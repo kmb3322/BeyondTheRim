@@ -200,13 +200,21 @@ export default function MainPage() {
 
           {/* 업로드 페이지로 이동 버튼 (ref 추가) */}
           <Button
-            ref={buttonRef}
-            colorScheme="red"
-            variant="solid"
-            onClick={() => navigate('/upload')}
-            fontFamily="heading"
+             ref={buttonRef}
+             bg="#f33c3c"
+             color="white"
+             colorScheme="black"
+             variant="solid"
+             onClick={() => navigate('/upload')}
+             fontFamily="heading"
+             boxShadow= "0 4px 6px rgba(0, 0, 0, 0.2)"
+
+             _hover={{
+               bg: "#d32f2f", // 커서 올렸을 때의 배경색
+               transform: "scale(1.02)", // 약간 확대 효과
+             }}
           >
-            업로드 페이지로
+            슛 폼 업로드 하기
           </Button>
 
           {/* shot 데이터에 따른 차트 표시 */}
