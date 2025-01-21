@@ -1,15 +1,15 @@
+// client/src/components/BasketballScene.tsx
 import { Html } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import React, { Suspense, useRef, useState } from 'react';
 import BasketballModel, { BasketballModelHandle } from './BasketballModel';
 
-/**
- * 3D 씬 + 오버레이를 배치
- * - Canvas 바깥에는 기본적으로 터치 스크롤 허용
- * - "투명 오버레이 div" 영역만 touch-action: none
- * - 드래그/탭 이벤트 처리 → 농구공에 회전/바운스 적용
- */
-const BasketballScene: React.FC = () => {
+type BasketballSceneProps = {
+  // MainPage에서 전달받은 높이 (버튼 바로 위까지)
+  sceneHeight: number;
+};
+
+const BasketballScene: React.FC<BasketballSceneProps> = ({ sceneHeight }) => {
   // 농구공 모델에 접근하기 위한 ref
   const modelRef = useRef<BasketballModelHandle>(null);
 
@@ -60,34 +60,30 @@ const BasketballScene: React.FC = () => {
       <Canvas
         camera={{ position: [0, 0, 4], fov: 60 }}
         style={{ width: '100%', height: '100%' }}
-        // 기본적으로 스크롤 허용: touchAction="auto"
       >
         <ambientLight intensity={1} />
         <directionalLight position={[0, 5, 5]} intensity={1.5} />
         <Suspense fallback={<Html>Loading...</Html>}>
-        <group position={[0, -1.2, 0]}>
-          <BasketballModel ref={modelRef} />
+          <group position={[0, -1.2, 0]}>
+            <BasketballModel ref={modelRef} />
           </group>
-
         </Suspense>
       </Canvas>
 
       {/* 
         2) "투명 오버레이" DIV.
            - 여기서만 touch-action: none → 스크롤 방지
-           - 그 외 영역은 자동으로 브라우저 스크롤 동작
+           - 오버레이의 높이를 MainPage에서 계산한 sceneHeight로 지정
       */}
       <div
         style={{
           position: 'absolute',
-          // 원하는 위치/크기로 조절 (예: 농구공 중심부를 덮도록)
           top: '-30px',
           width: '100%',
-          height: '600px',
-          // 시각 디버그용 투명도
-           //backgroundColor: 'rgba(255, 0, 0, 0.2)', //디버깅용
+          height: `${sceneHeight}px`,
+          // 개발/디버그 시 backgroundColor를 잠깐 활성화 할 수 있습니다.
+          // backgroundColor: 'rgba(255, 0, 0, 0.2)',
           backgroundColor: 'transparent',
-          // 스크롤 막기
           touchAction: 'none',
         }}
         onPointerDown={handlePointerDown}

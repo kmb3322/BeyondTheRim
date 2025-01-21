@@ -12,7 +12,7 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import axios from 'axios';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import BasketballScene from '../components/BasketballScene';
@@ -91,9 +91,7 @@ export default function MainPage() {
   // 3) 차트 및 평균 점수 계산
   // -----------------------------
   const labels = shots.map((shot) =>
-    shot.createdAt
-      ? new Date(shot.createdAt).toLocaleString()
-      : 'Unknown'
+    shot.createdAt ? new Date(shot.createdAt).toLocaleString() : 'Unknown'
   );
   const scores = shots.map((shot) => shot.score ?? 0);
   const averageScore = scores.length
@@ -133,6 +131,28 @@ export default function MainPage() {
     };
   }, [averageScore]);
 
+  // -----------------------------
+  // 5) 버튼 위치 기반으로 BasketballScene 높이 동적 조절
+  // -----------------------------
+  const [sceneHeight, setSceneHeight] = useState(520);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useLayoutEffect(() => {
+    const updateSceneHeight = () => {
+      if (buttonRef.current) {
+        // 문서 상단에서 버튼 상단까지의 거리를 계산하여 height로 사용합니다.
+        const rect = buttonRef.current.getBoundingClientRect();
+        setSceneHeight(rect.top);
+      }
+    };
+
+    updateSceneHeight(); // 최초 계산
+    window.addEventListener('resize', updateSceneHeight);
+    return () => {
+      window.removeEventListener('resize', updateSceneHeight);
+    };
+  }, []);
+
   const navigate = useNavigate();
 
   return (
@@ -143,20 +163,34 @@ export default function MainPage() {
 
       {/* BasketballScene는 headerType이 header1일 때만 (예시) */}
       {headerType === 'header1' && (
-        <Box position="absolute" top="0" left="0" width="100%" height="562px" zIndex={999}>
-          <BasketballScene />
+        <Box
+          position="absolute"
+          top="0"
+          left="0"
+          width="100%"
+          height={`${sceneHeight}px`}
+          zIndex={999}
+        >
+          {/* sceneHeight prop을 전달 */}
+          <BasketballScene sceneHeight={sceneHeight} />
         </Box>
       )}
 
       {/* 실제 페이지 컨텐츠 */}
       <Container maxW="md" pt={0} color="white">
         <VStack spacing={6} align="stretch">
-          <Text fontSize={38} fontFamily="Noto Sans KR" fontWeight={700} color="brand.400">
+          <Text
+            fontSize={38}
+            fontFamily="Noto Sans KR"
+            fontWeight={700}
+            color="brand.400"
+          >
             다시 코트에 오신 것을 환영합니다.
           </Text>
 
-          {/* 업로드 페이지로 이동 버튼 */}
+          {/* 업로드 페이지로 이동 버튼 (ref 추가) */}
           <Button
+            ref={buttonRef}
             colorScheme="red"
             variant="solid"
             onClick={() => navigate('/upload')}
