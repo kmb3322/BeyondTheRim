@@ -51,8 +51,8 @@ export default function LoginPage() {
             muted
             playsInline
             style={{
-              width: '50%',
-              height: '50%',
+              width: useBreakpointValue({ base: "80%", md: "50%" }),
+              height: useBreakpointValue({ base: "80%", md: "50%" }),
               objectFit: 'contain',
             }}
           />
