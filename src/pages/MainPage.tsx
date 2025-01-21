@@ -201,14 +201,14 @@ export default function MainPage() {
           {/* 업로드 페이지로 이동 버튼 (ref 추가) */}
           <Button
              ref={buttonRef}
-             bg="#f33c3c"
-             color="white"
+             
              colorScheme="black"
              variant="solid"
              onClick={() => navigate('/upload')}
              fontFamily="heading"
              boxShadow= "0 4px 6px rgba(0, 0, 0, 0.2)"
-
+              bg="#f33c3c"
+              color="white"
              _hover={{
                bg: "#d32f2f", // 커서 올렸을 때의 배경색
                transform: "scale(1.02)", // 약간 확대 효과
