@@ -3,7 +3,6 @@ import { Route, Routes } from 'react-router-dom';
 import IntroVideoPage from './pages/IntroVideoPage';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
-import ProfilePage from './pages/ProfilePage';
 import ResultPage from './pages/ResultPage';
 import UploadPage from './pages/UploadPage';
 import PrivateRoute from './routes/PrivateRoute';
@@ -37,14 +36,7 @@ function App() {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <ProfilePage />
-          </PrivateRoute>
-        }
-      />
+      
     </Routes>
   );
 }
