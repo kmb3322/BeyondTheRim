@@ -113,8 +113,11 @@ export default function UploadPage() {
           </Box>
 
           <Button
-            colorScheme="red"
+            colorScheme="#f33c3c"
+            bg="#f33c3c"
             variant="solid"
+            fontWeight={700}
+            textColor="white"
             onClick={handleUpload}
             fontFamily="heading"
           >

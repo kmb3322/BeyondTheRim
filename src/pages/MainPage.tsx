@@ -20,18 +20,19 @@ import Navbar from '../components/Navbar';
 import ScoreChart from '../components/ScoreChart';
 import { auth } from '../firebaseConfig';
 
+// Firestore에서 가져온 shot 문서 타입
 type ShotData = {
   id: string;
   s3Url: string;
   score: number | null;
   processed?: string | null;
-  createdAt?: any;
+  createdAt?: any; // Firestore Timestamp 또는 Date
 };
 
 export default function MainPage() {
-  // -----------------------------
-  // 1) 헤더 전환 상태 (scrollY > 400 기준)
-  // -----------------------------
+  // -------------------------------------------------------------
+  // 1) 헤더 전환 상태 (스크롤에 따라 header1 ↔ header2)
+  // -------------------------------------------------------------
   const [headerType, setHeaderType] = useState<'header1' | 'header2'>('header1');
 
   useEffect(() => {
@@ -49,9 +50,9 @@ export default function MainPage() {
     };
   }, []);
 
-  // -----------------------------
+  // -------------------------------------------------------------
   // 2) 서버에서 shots 불러오기
-  // -----------------------------
+  // -------------------------------------------------------------
   const [shots, setShots] = useState<ShotData[]>([]);
   const [loadingShots, setLoadingShots] = useState(true);
   const toast = useToast();
@@ -65,9 +66,7 @@ export default function MainPage() {
     try {
       const token = await auth.currentUser.getIdToken();
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-shots`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setShots(res.data.shots);
     } catch (err) {
@@ -85,22 +84,36 @@ export default function MainPage() {
 
   useEffect(() => {
     fetchShots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // -----------------------------
-  // 3) 차트 및 평균 점수 계산
-  // -----------------------------
-  const labels = shots.map((shot) =>
-    shot.createdAt ? new Date(shot.createdAt).toLocaleString() : 'Unknown'
-  );
+  // -------------------------------------------------------------
+  // 3) 차트 x축 라벨과 점수 데이터, 평균 점수
+  //    → createdAt을 년-월-일 형식으로 표시
+  // -------------------------------------------------------------
+  const labels = shots.map((shot) => {
+    if (shot.createdAt) {
+      // Firestore Timestamp인 경우 (seconds, nanoseconds 존재)
+      if (shot.createdAt.seconds) {
+        const date = new Date(shot.createdAt.seconds * 1000);
+        return date.toLocaleDateString('ko-KR'); // 예: 2025. 1. 22.
+      } else {
+        // 혹은 그냥 Date 문자열일 수도 있음
+        const date = new Date(shot.createdAt);
+        return date.toLocaleDateString('ko-KR');
+      }
+    }
+    return 'Unknown';
+  });
+
   const scores = shots.map((shot) => shot.score ?? 0);
   const averageScore = scores.length
     ? Math.round(scores.reduce((sum, cur) => sum + cur, 0) / scores.length)
     : 0;
 
-  // -----------------------------
+  // -------------------------------------------------------------
   // 4) 평균 점수 카운트업 애니메이션
-  // -----------------------------
+  // -------------------------------------------------------------
   const [displayScore, setDisplayScore] = useState(0);
   const requestRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -131,22 +144,22 @@ export default function MainPage() {
     };
   }, [averageScore]);
 
-  // -----------------------------
-  // 5) 버튼 위치 기반으로 BasketballScene 높이 동적 조절
-  // -----------------------------
+  // -------------------------------------------------------------
+  // 5) Background 영역(BasketballScene)을 화면 크기에 맞춰 동적 높이 조절
+  // -------------------------------------------------------------
   const [sceneHeight, setSceneHeight] = useState(520);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
 
   useLayoutEffect(() => {
     const updateSceneHeight = () => {
       if (buttonRef.current) {
-        // 문서 상단에서 버튼 상단까지의 거리를 계산하여 height로 사용합니다.
+        // 문서 최상단에서 버튼까지 거리 측정
         const rect = buttonRef.current.getBoundingClientRect();
         setSceneHeight(rect.top);
       }
     };
 
-    updateSceneHeight(); // 최초 계산
+    updateSceneHeight(); // 최초 호출
     window.addEventListener('resize', updateSceneHeight);
     return () => {
       window.removeEventListener('resize', updateSceneHeight);
@@ -157,11 +170,13 @@ export default function MainPage() {
 
   return (
     <Box minH="100vh" bg="transparent" position="relative">
-      {/* 헤더 영역 */}
+      {/* 헤더 */}
       <Navbar headerType={headerType} />
+
+      {/* 헤더 아래쪽 공간 확보용 */}
       <Box position="relative" width="100%" height="300px" />
 
-      {/* BasketballScene는 headerType이 header1일 때만 (예시) */}
+      {/* BasketballScene: headerType === 'header1' 일 때만 */}
       {headerType === 'header1' && (
         <Box
           position="absolute"
@@ -171,53 +186,51 @@ export default function MainPage() {
           height={`${sceneHeight}px`}
           zIndex={999}
         >
-          {/* sceneHeight prop을 전달 */}
           <BasketballScene sceneHeight={sceneHeight} />
         </Box>
       )}
 
-      {/* 실제 페이지 컨텐츠 */}
+      {/* 메인 컨텐츠 */}
       <Container maxW="md" pt={0} color="white">
         <VStack spacing={6} align="stretch">
-        <Text
-          fontSize={38}
-          fontFamily="Noto Sans KR"
-          fontWeight={700}
-          color="brand.400"
-        >
-          다시 코트에 오신 것을
-        </Text>
-        <Text
-          mt={-8}
-          fontSize={38}
-          fontFamily="Noto Sans KR"
-          fontWeight={700}
-          color="brand.400"
-        >
-          환영합니다.
-        </Text>
 
+          <Text
+            fontSize={38}
+            fontFamily="Noto Sans KR"
+            fontWeight={700}
+            color="brand.400"
+          >
+            다시 코트에 오신 것을
+          </Text>
+          <Text
+            mt={-8}
+            fontSize={38}
+            fontFamily="Noto Sans KR"
+            fontWeight={700}
+            color="brand.400"
+          >
+            환영합니다.
+          </Text>
 
-          {/* 업로드 페이지로 이동 버튼 (ref 추가) */}
+          {/* 업로드 페이지 이동 버튼 */}
           <Button
-             ref={buttonRef}
-             
-             colorScheme="black"
-             variant="solid"
-             onClick={() => navigate('/upload')}
-             fontFamily="heading"
-             boxShadow= "0 4px 6px rgba(0, 0, 0, 0.2)"
-              bg="#f33c3c"
-              color="white"
-             _hover={{
-               bg: "#d32f2f", // 커서 올렸을 때의 배경색
-               transform: "scale(1.02)", // 약간 확대 효과
-             }}
+            ref={buttonRef}
+            colorScheme="black"
+            variant="solid"
+            onClick={() => navigate('/upload')}
+            fontFamily="heading"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.2)"
+            bg="#f33c3c"
+            color="white"
+            _hover={{
+              bg: '#d32f2f',
+              transform: 'scale(1.02)',
+            }}
           >
             슛 폼 업로드 하기
           </Button>
 
-          {/* shot 데이터에 따른 차트 표시 */}
+          {/* Shot 데이터 UI */}
           {loadingShots && (
             <VStack spacing={4} mt={6}>
               <Spinner />
@@ -225,6 +238,7 @@ export default function MainPage() {
             </VStack>
           )}
 
+          {/* 평균 점수 + 차트 */}
           {!loadingShots && shots.length > 0 && (
             <VStack spacing={4} mt={6} border="1px solid white" p={4} borderRadius="md">
               <Text fontSize="3xl" fontWeight="bold" color="red.300">
@@ -253,6 +267,7 @@ export default function MainPage() {
             ) : (
               <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4}>
                 {shots.map((shot) => {
+                  // 만약 ML 처리된 영상이 있으면 processed를 우선 재생
                   const videoUrl = shot.processed ? shot.processed : shot.s3Url;
                   return (
                     <GridItem
@@ -278,7 +293,7 @@ export default function MainPage() {
               </Grid>
             )}
 
-            {/* 스크롤 테스트용 영역 */}
+            {/* 페이지 아래로 스크롤할 수 있도록 임의 공간 */}
             <Box height="100vh" />
           </Box>
         </VStack>
