@@ -74,6 +74,7 @@ export default function IntroVideoPage() {
             colorScheme="red"
             onClick={handleStart}
             fontWeight={700}
+            textColor={'white'}
             
             fontFamily="Noto Sans KR"  // Noto Sans KR 폰트 적용
             leftIcon={(
