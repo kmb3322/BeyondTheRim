@@ -33,7 +33,7 @@ export default function ResultPage() {
           <Box as="video" controls width="100%" src={videoUrl} />
         ) : (
           <Text color="brand.400" fontSize="lg">
-            아직 분석 결과가 없습니다!
+            아직 분석 결과가 없습니다.
           </Text>
         )}
       </Container>
