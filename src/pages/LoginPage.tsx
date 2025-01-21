@@ -9,8 +9,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   // 화면 크기에 따라 텍스트 속성을 동적으로 설정합니다.
-  const fontSize = useBreakpointValue({ base: '16px', md: '24px' });
-  const letterSpacing = useBreakpointValue({ base: '12px', md: '25px' });
+  const fontSize = useBreakpointValue({ base: '18px', md: '24px' });
+  const letterSpacing = useBreakpointValue({ base: '17px', md: '25px' });
   
   const handleGoogleLogin = async () => {
     try {
@@ -41,9 +41,10 @@ export default function LoginPage() {
       display="flex"
       justifyContent="center"
       alignItems="center"
+      textAlign="center" w="full"
     >
       <Container pt={10} pb={10} maxW="container.xl">
-        <VStack spacing={6}>
+        <VStack spacing={6} align="center">
           <video
             src={nbalogo3}
             autoPlay
@@ -57,14 +58,17 @@ export default function LoginPage() {
             }}
           />
           <Text
+            as="span"
+
             fontSize={fontSize}
             fontFamily="Noto Sans KR"
             fontWeight={700}
             color="#f33c3c"
             letterSpacing={letterSpacing}
             textAlign="center"
-            maxW="100%"
-            mb={20}
+            maxW="90%"
+            mb={10}
+            display="inline-block"
           >
             새로운 코트에 참여하세요
           </Text>
