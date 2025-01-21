@@ -1,4 +1,4 @@
-// src/pages/LoginPage.tsx
+// client/src/pages/LoginPage.tsx
 import { Box, Button, Container, Text, VStack, useToast } from '@chakra-ui/react';
 import { signInWithPopup } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ export default function LoginPage() {
           status: 'success',
           isClosable: true,
         });
-        navigate('/main'); // 로그인 성공 후 원하는 페이지로 이동
+        navigate('/main');
       }
     } catch (error) {
       console.error(error);
@@ -36,11 +36,7 @@ export default function LoginPage() {
           <Text fontSize="2xl" fontWeight="bold">
             Google 계정으로 로그인
           </Text>
-          <Button
-            colorScheme="red"
-            onClick={handleGoogleLogin}
-            fontFamily="heading"
-          >
+          <Button colorScheme="red" onClick={handleGoogleLogin} fontFamily="heading">
             구글 로그인
           </Button>
         </VStack>

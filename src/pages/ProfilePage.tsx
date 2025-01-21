@@ -1,16 +1,15 @@
 // src/pages/ProfilePage.tsx
 import {
-    AspectRatio,
-    Box,
-    Grid,
-    GridItem,
-    Spinner,
-    Text,
-    useToast,
+  AspectRatio,
+  Box,
+  Grid,
+  GridItem,
+  Spinner,
+  Text,
+  useToast,
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
-import { getUserShots } from '../services/firestoreServices';
   
   type ShotData = {
     id: string;

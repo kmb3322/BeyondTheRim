@@ -1,4 +1,4 @@
-// src/pages/UploadPage.tsx
+// client/src/pages/UploadPage.tsx
 import {
   Box,
   Button,
@@ -8,21 +8,19 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import axios from 'axios';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
 
 import Navbar from '../components/Navbar';
-import { auth, db } from '../firebaseConfig';
+import { auth } from '../firebaseConfig';
 
 export default function UploadPage() {
-  // -----------------------------
-  // 1) 헤더 전환 상태
-  // -----------------------------
   const [headerType, setHeaderType] = useState<'header1' | 'header2'>('header1');
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const toast = useToast();
+  const navigate = useNavigate();
 
-  // (단순히 스크롤 감지해서 헤더 전환)
+  // 스크롤 이벤트 (헤더 전환 여부)
   React.useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
@@ -32,17 +30,8 @@ export default function UploadPage() {
       }
     };
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // -----------------------------
-  // 2) 파일 업로드 상태
-  // -----------------------------
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const toast = useToast();
-  const navigate = useNavigate();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -53,14 +42,13 @@ export default function UploadPage() {
   const handleUpload = async () => {
     if (!videoFile) {
       toast({
-        title: 'No video selected',
+        title: '영상 파일을 선택해주세요.',
         status: 'warning',
         isClosable: true,
       });
       return;
     }
 
-    // 로그인 유저 체크
     if (!auth.currentUser) {
       toast({
         title: '로그인이 필요합니다.',
@@ -71,45 +59,35 @@ export default function UploadPage() {
     }
 
     try {
-      // 2-1) 서버로부터 Presigned URL 획득
-      const resPresigned = await axios.post(
-        'http://localhost:4000/api/get-presigned-url',
-        {
-          filename: videoFile.name,
-        }
-      );
-      const { presignedUrl, s3ObjectKey } = resPresigned.data;
+      // Firebase 토큰 가져오기
+      const token = await auth.currentUser.getIdToken();
 
-      // 2-2) Presigned URL로 S3에 PUT 업로드
-      await axios.put(presignedUrl, videoFile, {
+      // FormData 구성
+      const formData = new FormData();
+      formData.append('video', videoFile);
+
+      // 서버 업로드 요청
+      const response = await axios.post('http://localhost:4000/api/upload-video', formData, {
         headers: {
-          'Content-Type': videoFile.type,
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`, // 서버에서 verifyAuthToken으로 검증
         },
       });
 
-      // 2-3) Firestore에 기록 (score는 아직 분석 전이므로 null)
-      const userId = auth.currentUser.uid;
-      const docId = uuidv4();
-
-      await setDoc(doc(db, 'users', userId, 'shots', docId), {
-        s3Url: `https://${import.meta.env.VITE_S3_BUCKET_NAME}.s3.amazonaws.com/${s3ObjectKey}`,
-        score: null,
-        createdAt: serverTimestamp(),
-      });
-
+      console.log(response.data);
       toast({
-        title: '영상 업로드 성공!',
+        title: '업로드 완료',
+        description: '영상이 성공적으로 업로드되었습니다.',
         status: 'success',
         isClosable: true,
       });
 
-      // 업로드 후 메인페이지로 이동
       navigate('/main');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       toast({
         title: '업로드 실패',
-        description: String(error),
+        description: error?.response?.data?.message || String(error),
         status: 'error',
         isClosable: true,
       });
