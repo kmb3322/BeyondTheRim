@@ -1,14 +1,14 @@
 import {
-    AspectRatio,
-    Box,
-    Button,
-    Container,
-    Grid,
-    GridItem,
-    Spinner,
-    Text,
-    useToast,
-    VStack,
+  AspectRatio,
+  Box,
+  Button,
+  Container,
+  Grid,
+  GridItem,
+  Spinner,
+  Text,
+  useToast,
+  VStack,
 } from '@chakra-ui/react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { useEffect, useRef, useState } from 'react';
@@ -150,7 +150,7 @@ import { auth, db } from '../firebaseConfig';
     
         {/* BasketballScene는 header가 header1일 때만 활성화 */}
         <Box position="absolute" top="0" left="0" width="100%" height="562px" zIndex={999}>
-          <BasketballScene enabled={headerType === 'header1'} />
+          <BasketballScene />
         </Box>
     
         {/* 실제 페이지 컨텐츠 */}

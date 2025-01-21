@@ -23,7 +23,7 @@ export interface BasketballModelHandle {
  * - Plane 없이, 오직 3D 애니메이션(회전, 바운스)만 담당
  * - 부모가 ref를 통해 triggerBounce & applyRotation을 호출
  */
-const BasketballModel = forwardRef<BasketballModelHandle>((props, ref) => {
+const BasketballModel = forwardRef<BasketballModelHandle>((_, ref) => {
   // GLTF 모델 로드
   const { scene } = useGLTF('/basketball.glb') as GLTFResult;
   const groupRef = useRef<THREE.Group>(null);
