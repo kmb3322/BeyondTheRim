@@ -64,7 +64,7 @@ export default function MainPage() {
     }
     try {
       const token = await auth.currentUser.getIdToken();
-      const res = await axios.get('http://localhost:4000/api/user-shots', {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-shots`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

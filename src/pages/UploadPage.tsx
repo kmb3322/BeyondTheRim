@@ -67,7 +67,7 @@ export default function UploadPage() {
       formData.append('video', videoFile);
 
       // 서버 업로드 요청
-      const response = await axios.post('http://localhost:4000/api/upload-video', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-video`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`, // 서버에서 verifyAuthToken으로 검증
