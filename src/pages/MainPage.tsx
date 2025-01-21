@@ -179,14 +179,24 @@ export default function MainPage() {
       {/* 실제 페이지 컨텐츠 */}
       <Container maxW="md" pt={0} color="white">
         <VStack spacing={6} align="stretch">
-          <Text
-            fontSize={38}
-            fontFamily="Noto Sans KR"
-            fontWeight={700}
-            color="brand.400"
-          >
-            다시 코트에 오신 것을 환영합니다.
-          </Text>
+        <Text
+          fontSize={38}
+          fontFamily="Noto Sans KR"
+          fontWeight={700}
+          color="brand.400"
+        >
+          다시 코트에 오신 것을
+        </Text>
+        <Text
+          mt={-8}
+          fontSize={38}
+          fontFamily="Noto Sans KR"
+          fontWeight={700}
+          color="brand.400"
+        >
+          환영합니다.
+        </Text>
+
 
           {/* 업로드 페이지로 이동 버튼 (ref 추가) */}
           <Button
