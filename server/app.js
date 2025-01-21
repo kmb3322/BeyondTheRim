@@ -109,4 +109,32 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
   }
 });
 
+/**
+ * [2] 유저의 업로드 목록을 불러오는 API
+ * 클라이언트는 헤더에 Firebase 토큰을 넣어서 GET /api/user-shots 요청
+ */
+app.get('/api/user-shots', verifyAuthToken, async (req, res) => {
+    try {
+      const userId = req.user.uid;
+  
+      const shotsRef = db
+        .collection('users')
+        .doc(userId)
+        .collection('shots')
+        .orderBy('createdAt', 'asc');
+  
+      const snapshot = await shotsRef.get();
+      const shots = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      return res.json({ shots });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Failed to fetch user shots' });
+    }
+  });
+
+  
 module.exports = app;
