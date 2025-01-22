@@ -56,7 +56,7 @@ export default function IntroVideoPage() {
       {showButton && (
         <Box
           position="absolute"
-          top="67%"
+          top="68%"
           left="50%"
           transform="translate(-50%, -50%)"
           opacity={0} // 초기 투명도
@@ -69,10 +69,11 @@ export default function IntroVideoPage() {
           }}
         >
           <Button
+            alignContent={"center"}
             borderRadius={12}
-            width="320px"
+            width="300px"
             colorScheme="#f33c3c"
-            bg="#f33c3c"
+            bg="rgb(160, 13, 13)"
             onClick={handleStart}
             fontWeight={700}
             textColor={'white'}
