@@ -245,9 +245,9 @@ export default function MainPage() {
             fontFamily="Noto Sans KR"
             boxShadow="0 4px 6px rgba(0, 0, 0, 0.2)"
             bg="#f33c3c"
-            fontWeight={500}
+            fontWeight={700}
             fontSize={15}
-            color="white"
+            color="black"
             _hover={{
               bg: '#d32f2f',
               transform: 'scale(1.02)',

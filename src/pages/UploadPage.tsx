@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   Container,
+  Flex,
   Image,
   Progress,
   Text,
@@ -240,13 +241,42 @@ export default function UploadPage() {
           {/* 이미지 및 텍스트가 함께 페이드 효과로 전환되는 캐러셀 */}
           <ImageCarousel />
 
-          <Box>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              style={{ color: 'white' }}
-            />
+          <Box >
+          <Flex alignItems="center" justify={"center"}>
+          <input
+            type="file"
+            accept="video/*"
+            id="file-upload"
+            onChange={handleFileChange}
+            style={{ display: 'none' }} // input 숨김
+          />
+          <label htmlFor="file-upload">
+            <Button
+              as="span"
+              bg="transparent"
+              colorScheme="black"
+              border="1px solid #f33c3c"
+              fontWeight={600}
+              fontSize="12px"
+              textColor="#f33c3c"
+              borderRadius="full"
+              padding="4px 12px"
+              _hover={{
+                bg: '#f33c3c',
+                color: 'black',
+                transform: 'scale(1.05)',
+              }}
+              transition="all 0.2s"
+            >
+              업로드할 파일 선택
+            </Button>
+          </label>
+          {videoFile && (
+        <Text ml={3} fontSize={14} fontFamily="Noto Sans KR" fontWeight={700} color="#f33c3c">
+          {videoFile.name}
+        </Text>
+      )}
+      </Flex>
           </Box>
 
           {/* 업로드 진행률 표시 */}
@@ -254,7 +284,7 @@ export default function UploadPage() {
             <Progress
               value={uploadProgress}
               size="sm"
-              colorScheme="green"
+              colorScheme="rgb(160, 13, 13)"
               borderRadius="md"
             />
           )}
@@ -264,7 +294,7 @@ export default function UploadPage() {
             variant="solid"
             fontWeight={500}
             fontSize={15}
-            textColor="white"
+            textColor="black"
             onClick={handleUpload}
             fontFamily="Noto Sans KR"
             colorScheme="black"
