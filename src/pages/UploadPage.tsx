@@ -204,7 +204,7 @@ export default function UploadPage() {
             fontFamily="Noto Sans KR"
             fontWeight={700}
             color="#f33c3c"
-            mb={-7}
+            mb={-8}
           >
             분석할 영상을
           </Text>
@@ -213,15 +213,16 @@ export default function UploadPage() {
             fontFamily="Noto Sans KR"
             fontWeight={700}
             color="#f33c3c"
-            mb={-6}
+            mb={-5}
           >
             여기에 업로드 하세요.
           </Text>
           <Text
             fontSize={12}
             fontFamily="Noto Sans KR"
-            fontWeight={700}
+            fontWeight={500}
             mb={-6}
+            ml={1}
             color="gray.300"
           >
             초당 165.2FLOPs의 자체 딥러닝 모델을 통해
@@ -229,8 +230,9 @@ export default function UploadPage() {
           <Text
             fontSize={12}
             fontFamily="Noto Sans KR"
-            fontWeight={700}
+            fontWeight={500}
             color="gray.300"
+            ml={1}
           >
             엄선된 NBA·KBL 선수들의 슛 폼 데이터 셋과 대조합니다.
           </Text>
