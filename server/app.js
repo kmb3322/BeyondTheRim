@@ -4,14 +4,12 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
 const { S3Client } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 
 const { runAnalysis } = require('./analysis');
 const { db, authAdmin } = require('./firebaseAdmin');
 
-// 로컬에서는 dotenv 로드 (Vercel에선 환경변수 사용)
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -21,12 +19,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// multer 설정: production이면 /tmp, 로컬이면 ./uploads
+// production이면 /tmp, 로컬이면 ./uploads
 const uploadDir =
   process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, 'uploads');
-const upload = multer({ dest: uploadDir });
 
-// 간단한 헬스 체크
+// Multer 설정: 파일 크기 제한 100MB
+const upload = multer({
+  dest: uploadDir,
+  limits: { fileSize: 100 * 1024 * 1024 },
+});
+
+// 헬스 체크
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -51,8 +54,7 @@ async function verifyAuthToken(req, res, next) {
 }
 
 /**
- * 클라이언트에서 영상 업로드 요청을 받으면 S3에 업로드 후 Firestore에 문서 생성
- * "머신러닝 처리는 ml_computer 쪽에서" 추가로 수행 → Firestore 문서 업데이트
+ * 영상 업로드 엔드포인트
  */
 app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (req, res) => {
   try {
@@ -60,11 +62,11 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // 파일 정보
+    // S3 Key
     const originalName = path.basename(req.file.originalname);
     const s3Key = `videos/${Date.now()}_${originalName}`;
 
-    // AWS S3 클라이언트
+    // S3 클라이언트
     const s3 = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
@@ -73,10 +75,10 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       },
     });
 
-    // 파일 스트림 생성
+    // 파일 스트림
     const fileStream = fs.createReadStream(req.file.path);
 
-    // 파일 S3 업로드
+    // S3 업로드
     const uploadObj = new Upload({
       client: s3,
       params: {
@@ -89,10 +91,10 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 
     await uploadObj.done();
 
-    // 임시 파일 삭제
+    // 임시파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 간단한 서버 측 분석(혹은 무의미): runAnalysis
+    // 간단 분석 (서버 측): runAnalysis
     const analysisResult = await runAnalysis(s3Key);
 
     // Firestore에 문서 생성
@@ -102,21 +104,25 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       .collection('shots')
       .doc();
 
-    // 아직 머신러닝 처리는 완료되지 않았으므로 processedUrl 등은 null(또는 undefined -> null)
     await newDocRef.set({
       s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
       score: analysisResult.score ?? 0,
       processed: analysisResult.processedUrl ?? null,
-      analysis: null, // 머신러닝 처리 결과가 들어갈 필드(처음엔 null)
-      newUrl: null,   // 머신러닝 처리 후 새 영상을 S3에 업로드하면 여기에 URL 업데이트
+      analysis: null, // 머신러닝 후 업데이트
+      newUrl: null,   // 머신러닝 후 업데이트
       createdAt: new Date(),
     });
 
-    res.json({
+    return res.json({
       message: 'Upload & analysis success',
       s3Key,
     });
   } catch (err) {
+    // multer에서 100MB 초과 시 "LIMIT_FILE_SIZE" 에러가 날 수 있음
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ message: 'File size exceeds 100MB limit' });
+    }
+
     console.error('Upload endpoint error:', err);
     res.status(500).json({ message: 'Server error' });
   }

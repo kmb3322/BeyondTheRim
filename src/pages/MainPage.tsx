@@ -25,13 +25,15 @@ type ShotData = {
   id: string;
   s3Url: string;
   score: number | null;
-  processed?: string | null;
-  createdAt?: any; // Firestore Timestamp 또는 Date
+  newUrl?: string | null; // 머신러닝 처리 후 추가
+  processed?: any; // 처리 완료 시간 (Date or Timestamp or null)
+  analysis?: string | null; // 분석 결과
+  createdAt?: any; // Firestore Timestamp 또는 Date 또는 string
 };
 
 export default function MainPage() {
   // -------------------------------------------------------------
-  // 1) 헤더 전환 상태 (스크롤에 따라 header1 ↔ header2)
+  // 1) 헤더 전환 상태
   // -------------------------------------------------------------
   const [headerType, setHeaderType] = useState<'header1' | 'header2'>('header1');
 
@@ -88,25 +90,43 @@ export default function MainPage() {
   }, []);
 
   // -------------------------------------------------------------
-  // 3) 차트 x축 라벨과 점수 데이터, 평균 점수
-  //    → createdAt을 년-월-일 형식으로 표시
+  // 3) 차트용 날짜 라벨, 점수
   // -------------------------------------------------------------
+
+  // 안전하게 Date 객체로 변환하는 함수
+  function parseFirestoreDate(field: any): Date | null {
+    if (!field) return null;
+
+    // Firestore Timestamp 객체 형태인지 확인
+    if (field.seconds && typeof field.seconds === 'number') {
+      return new Date(field.seconds * 1000);
+    }
+    // 혹은 _seconds?
+    if (field._seconds && typeof field._seconds === 'number') {
+      return new Date(field._seconds * 1000);
+    }
+
+    // 만약 그냥 문자열로 저장된 경우
+    const dateObj = new Date(field);
+    if (isNaN(dateObj.getTime())) {
+      return null; // 파싱 실패
+    }
+    return dateObj;
+  }
+
+  // x축 라벨
   const labels = shots.map((shot) => {
-    if (shot.createdAt) {
-      // Firestore Timestamp인 경우 (seconds, nanoseconds 존재)
-      if (shot.createdAt.seconds) {
-        const date = new Date(shot.createdAt.seconds * 1000);
-        return date.toLocaleDateString('ko-KR'); // 예: 2025. 1. 22.
-      } else {
-        // 혹은 그냥 Date 문자열일 수도 있음
-        const date = new Date(shot.createdAt);
-        return date.toLocaleDateString('ko-KR');
-      }
+    const parsedDate = parseFirestoreDate(shot.createdAt);
+    if (parsedDate) {
+      return parsedDate.toLocaleDateString('ko-KR'); // "2025. 1. 22." 등
     }
     return 'Unknown';
   });
 
+  // 점수 배열
   const scores = shots.map((shot) => shot.score ?? 0);
+
+  // 평균 점수
   const averageScore = scores.length
     ? Math.round(scores.reduce((sum, cur) => sum + cur, 0) / scores.length)
     : 0;
@@ -145,7 +165,7 @@ export default function MainPage() {
   }, [averageScore]);
 
   // -------------------------------------------------------------
-  // 5) Background 영역(BasketballScene)을 화면 크기에 맞춰 동적 높이 조절
+  // 5) Background 영역(BasketballScene)
   // -------------------------------------------------------------
   const [sceneHeight, setSceneHeight] = useState(520);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -153,13 +173,12 @@ export default function MainPage() {
   useLayoutEffect(() => {
     const updateSceneHeight = () => {
       if (buttonRef.current) {
-        // 문서 최상단에서 버튼까지 거리 측정
         const rect = buttonRef.current.getBoundingClientRect();
         setSceneHeight(rect.top);
       }
     };
 
-    updateSceneHeight(); // 최초 호출
+    updateSceneHeight();
     window.addEventListener('resize', updateSceneHeight);
     return () => {
       window.removeEventListener('resize', updateSceneHeight);
@@ -176,7 +195,7 @@ export default function MainPage() {
       {/* 헤더 아래쪽 공간 확보용 */}
       <Box position="relative" width="100%" height="300px" />
 
-      {/* BasketballScene: headerType === 'header1' 일 때만 */}
+      {/* BasketballScene: headerType === 'header1' 일 때만 표시 */}
       {headerType === 'header1' && (
         <Box
           position="absolute"
@@ -193,7 +212,6 @@ export default function MainPage() {
       {/* 메인 컨텐츠 */}
       <Container maxW="md" pt={0} color="white">
         <VStack spacing={6} align="stretch">
-
           <Text
             fontSize={38}
             fontFamily="Noto Sans KR"
@@ -267,8 +285,10 @@ export default function MainPage() {
             ) : (
               <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4}>
                 {shots.map((shot) => {
-                  // 만약 ML 처리된 영상이 있으면 processed를 우선 재생
-                  const videoUrl = shot.processed ? shot.processed : shot.s3Url;
+                  const hasNewUrl = shot.newUrl && shot.newUrl !== null;
+                  // newUrl이 있으면 그걸, 아니면 원본 s3Url
+                  const videoUrl = hasNewUrl ? shot.newUrl! : shot.s3Url;
+
                   return (
                     <GridItem
                       key={shot.id}
@@ -284,16 +304,17 @@ export default function MainPage() {
                           style={{ width: '100%', height: '100%' }}
                         />
                       </AspectRatio>
-                      <Text mt={2}>
-                        점수: {shot.score ?? '분석 중'}
+                      <Text mt={2} fontWeight="bold">
+                        {hasNewUrl ? '분석완료' : '분석전'}
                       </Text>
+                      <Text>점수: {shot.score ?? '분석 중'}</Text>
                     </GridItem>
                   );
                 })}
               </Grid>
             )}
 
-            {/* 페이지 아래로 스크롤할 수 있도록 임의 공간 */}
+            {/* 아래쪽 여백 */}
             <Box height="100vh" />
           </Box>
         </VStack>
