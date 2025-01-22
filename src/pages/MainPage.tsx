@@ -6,6 +6,7 @@ import {
   Container,
   Grid,
   GridItem,
+  IconButton,
   Spinner,
   Text,
   useToast,
@@ -13,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import axios from 'axios';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { FiRefreshCw } from 'react-icons/fi'; // 새로고침 아이콘
 import { useNavigate } from 'react-router-dom';
 
 import BasketballScene from '../components/BasketballScene';
@@ -186,6 +188,9 @@ export default function MainPage() {
   }, []);
 
   const navigate = useNavigate();
+  const refreshShot = async () => {
+    await fetchShots(); // 전체 목록 업데이트 (각 shot의 newUrl 등 최신 상태 반영)
+  };
 
   return (
     <Box minH="100vh" bg="transparent" position="relative">
@@ -272,7 +277,7 @@ export default function MainPage() {
 
           {/* 영상 갤러리 */}
           <Box mt={6}>
-            <Text fontSize="2xl" mb={6}>
+            <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} fontSize={30} mb={2}>
               나의 슛 영상 갤러리
             </Text>
 
@@ -297,6 +302,17 @@ export default function MainPage() {
                       overflow="hidden"
                       p={2}
                     >
+                      <IconButton
+                        aria-label="새로고침"
+                        icon={<FiRefreshCw />}
+                        size="sm"
+                        mb={3}
+                        colorScheme="#f33c3c"
+                        left="92%"
+                        borderRadius="full"
+                        onClick={() => refreshShot()}
+                        _hover={{ bg: '#f33c3c' }}
+                      />
                       <AspectRatio ratio={16 / 9}>
                         <video
                           src={videoUrl}
@@ -304,10 +320,23 @@ export default function MainPage() {
                           style={{ width: '100%', height: '100%' }}
                         />
                       </AspectRatio>
-                      <Text mt={2} fontWeight="bold">
-                        {hasNewUrl ? '분석완료' : '분석전'}
-                      </Text>
-                      <Text>점수: {shot.score ?? '분석 중'}</Text>
+                      <Box ml={3} mb={5} display="flex" flexDirection="row">
+                      {hasNewUrl && (
+                    <Text textColor={"#f33c3c"} fontSize={30}>{shot.score}</Text>
+                     )}
+                      {hasNewUrl && (
+                    <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} mt={1} fontSize={16}>점</Text>
+                     )}
+                     
+                      {!hasNewUrl && (
+                    <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} fontSize={22}>분석 중</Text>
+                     )}
+                      
+
+                      
+                      
+                      
+                      </Box>
                     </GridItem>
                   );
                 })}
