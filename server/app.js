@@ -4,11 +4,18 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PutObjectCommand, S3Client } = require('@aws-sdk/client-s3');
+
+// AWS SDK
+const { S3Client } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
+
+// 분석 로직 (예시)
 const { runAnalysis } = require('./analysis');
+
+// Firebase Admin
 const { db, authAdmin } = require('./firebaseAdmin');
 
-// 로컬 실행 시 dotenv로 환경변수 불러오기 (production 시에는 Vercel 환경변수 사용)
+// 로컬 환경에서 .env 적용
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
@@ -19,11 +26,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// multer: 업로드 폴더는 Vercel 환경에서는 /tmp 사용, 로컬에서는 server/uploads 사용
-const uploadDir = process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, 'uploads');
+// Multer: 업로드 폴더 설정
+const uploadDir =
+  process.env.NODE_ENV === 'production'
+    ? '/tmp'
+    : path.join(__dirname, 'uploads');
+
 const upload = multer({ dest: uploadDir });
 
-// Health-check 엔드포인트 추가
+// Health-check 엔드포인트
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -48,13 +59,16 @@ async function verifyAuthToken(req, res, next) {
 }
 
 /**
- * /api/upload-video 엔드포인트
+ * /api/upload-video
+ * 비디오 파일을 업로드하고 분석을 실행한 뒤,
+ * Firestore에 결과를 기록하는 엔드포인트
  */
 app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
+
     // S3에 업로드할 Key 생성
     const originalName = path.basename(req.file.originalname);
     const s3Key = `videos/${Date.now()}_${originalName}`;
@@ -70,21 +84,28 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 
     // 파일 스트림 생성
     const fileStream = fs.createReadStream(req.file.path);
-    const putCmd = new PutObjectCommand({
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: s3Key,
-      Body: fileStream,
-      ContentType: req.file.mimetype || 'video/mp4',
-    });
-    await s3.send(putCmd);
 
-    // 임시 파일 삭제
+    // @aws-sdk/lib-storage의 Upload 클래스를 사용하여 업로드 (경고 제거용)
+    const uploadObj = new Upload({
+      client: s3,
+      params: {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: s3Key,
+        Body: fileStream,
+        ContentType: req.file.mimetype || 'video/mp4',
+      },
+    });
+
+    // 업로드 완료 대기
+    await uploadObj.done();
+
+    // 로컬/임시 파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 영상 분석 수행
+    // 영상 분석 수행 (runAnalysis는 예시)
     const analysisResult = await runAnalysis(s3Key);
 
-    // Firestore 기록
+    // Firestore에 기록
     const newDocRef = db
       .collection('users')
       .doc(req.user.uid)
@@ -93,8 +114,9 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 
     await newDocRef.set({
       s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
-      score: analysisResult.score,
-      processed: analysisResult.processedUrl,
+      score: analysisResult.score ?? null,
+      // undefined 방지용: processedUrl이 없으면 null로 저장
+      processed: analysisResult.processedUrl ?? null,
       createdAt: new Date(),
     });
 
@@ -110,31 +132,30 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 });
 
 /**
- * [2] 유저의 업로드 목록을 불러오는 API
+ * 유저의 업로드 목록을 불러오는 API
  * 클라이언트는 헤더에 Firebase 토큰을 넣어서 GET /api/user-shots 요청
  */
 app.get('/api/user-shots', verifyAuthToken, async (req, res) => {
-    try {
-      const userId = req.user.uid;
-  
-      const shotsRef = db
-        .collection('users')
-        .doc(userId)
-        .collection('shots')
-        .orderBy('createdAt', 'asc');
-  
-      const snapshot = await shotsRef.get();
-      const shots = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      return res.json({ shots });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Failed to fetch user shots' });
-    }
-  });
+  try {
+    const userId = req.user.uid;
 
-  
+    const shotsRef = db
+      .collection('users')
+      .doc(userId)
+      .collection('shots')
+      .orderBy('createdAt', 'asc');
+
+    const snapshot = await shotsRef.get();
+    const shots = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return res.json({ shots });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Failed to fetch user shots' });
+  }
+});
+
 module.exports = app;

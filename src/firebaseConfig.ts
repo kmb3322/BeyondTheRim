@@ -1,9 +1,9 @@
-// src/firebaseConfig.ts
+// client/src/firebaseConfig.ts
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// .env에서 불러오기 (Vite 기준: import.meta.env.VITE_...)
+// Vite 환경변수에서 불러오기
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,

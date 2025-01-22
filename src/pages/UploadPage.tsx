@@ -67,12 +67,16 @@ export default function UploadPage() {
       formData.append('video', videoFile);
 
       // 서버 업로드 요청
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/upload-video`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`, // 서버에서 verifyAuthToken으로 검증
-        },
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/upload-video`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`, // 서버에서 verifyAuthToken으로 검증
+          },
+        }
+      );
 
       console.log(response.data);
       toast({
@@ -82,6 +86,7 @@ export default function UploadPage() {
         isClosable: true,
       });
 
+      // 업로드 성공 후 페이지 이동(예: /main)
       navigate('/main');
     } catch (error: any) {
       console.error(error);
@@ -99,7 +104,12 @@ export default function UploadPage() {
       <Navbar headerType={headerType} />
       <Container maxW="md" pt={10} color="white">
         <VStack spacing={6} align="stretch">
-          <Text fontSize={38} fontFamily="Noto Sans KR" fontWeight={700} color="brand.400">
+          <Text
+            fontSize={38}
+            fontFamily="Noto Sans KR"
+            fontWeight={700}
+            color="brand.400"
+          >
             영상을 업로드해주세요
           </Text>
 
