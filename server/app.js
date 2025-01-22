@@ -85,7 +85,7 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
     // 파일 스트림 생성
     const fileStream = fs.createReadStream(req.file.path);
 
-    // @aws-sdk/lib-storage의 Upload 클래스를 사용하여 업로드 (경고 제거용)
+    // @aws-sdk/lib-storage의 Upload 클래스를 사용하여 업로드
     const uploadObj = new Upload({
       client: s3,
       params: {
@@ -102,8 +102,23 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
     // 로컬/임시 파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 영상 분석 수행 (runAnalysis는 예시)
+    // 영상 분석 수행
     const analysisResult = await runAnalysis(s3Key);
+
+    // Firestore에 저장할 데이터 준비 - undefined 값 필터링
+    const docData = {
+      s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
+      score: analysisResult.score ?? null,
+      processed: analysisResult.processedUrl ?? null,
+      createdAt: new Date(),
+    };
+
+    // undefined 값이 있는지 확인하고 제거
+    Object.keys(docData).forEach(key => {
+      if (docData[key] === undefined) {
+        delete docData[key];
+      }
+    });
 
     // Firestore에 기록
     const newDocRef = db
@@ -112,13 +127,7 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       .collection('shots')
       .doc();
 
-    await newDocRef.set({
-      s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
-      score: analysisResult.score ?? null,
-      // undefined 방지용: processedUrl이 없으면 null로 저장
-      processed: analysisResult.processedUrl ?? null,
-      createdAt: new Date(),
-    });
+    await newDocRef.set(docData);
 
     res.json({
       message: 'Upload & analysis success',
