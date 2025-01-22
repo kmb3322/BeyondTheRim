@@ -5,36 +5,28 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// AWS SDK
 const { S3Client } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
 
-// 분석 로직 (예시)
 const { runAnalysis } = require('./analysis');
-
-// Firebase Admin
 const { db, authAdmin } = require('./firebaseAdmin');
 
-// 로컬 환경에서 .env 적용
+// 로컬에서는 dotenv 로드 (Vercel에선 환경변수 사용)
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
 const app = express();
 
-// 미들웨어
 app.use(cors());
 app.use(express.json());
 
-// Multer: 업로드 폴더 설정
+// multer 설정: production이면 /tmp, 로컬이면 ./uploads
 const uploadDir =
-  process.env.NODE_ENV === 'production'
-    ? '/tmp'
-    : path.join(__dirname, 'uploads');
-
+  process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, 'uploads');
 const upload = multer({ dest: uploadDir });
 
-// Health-check 엔드포인트
+// 간단한 헬스 체크
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -59,9 +51,8 @@ async function verifyAuthToken(req, res, next) {
 }
 
 /**
- * /api/upload-video
- * 비디오 파일을 업로드하고 분석을 실행한 뒤,
- * Firestore에 결과를 기록하는 엔드포인트
+ * 클라이언트에서 영상 업로드 요청을 받으면 S3에 업로드 후 Firestore에 문서 생성
+ * "머신러닝 처리는 ml_computer 쪽에서" 추가로 수행 → Firestore 문서 업데이트
  */
 app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (req, res) => {
   try {
@@ -69,11 +60,11 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    // S3에 업로드할 Key 생성
+    // 파일 정보
     const originalName = path.basename(req.file.originalname);
     const s3Key = `videos/${Date.now()}_${originalName}`;
 
-    // AWS S3 클라이언트 생성
+    // AWS S3 클라이언트
     const s3 = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
@@ -85,7 +76,7 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
     // 파일 스트림 생성
     const fileStream = fs.createReadStream(req.file.path);
 
-    // @aws-sdk/lib-storage의 Upload 클래스를 사용하여 업로드
+    // 파일 S3 업로드
     const uploadObj = new Upload({
       client: s3,
       params: {
@@ -96,43 +87,34 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       },
     });
 
-    // 업로드 완료 대기
     await uploadObj.done();
 
-    // 로컬/임시 파일 삭제
+    // 임시 파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 영상 분석 수행
+    // 간단한 서버 측 분석(혹은 무의미): runAnalysis
     const analysisResult = await runAnalysis(s3Key);
 
-    // Firestore에 저장할 데이터 준비 - undefined 값 필터링
-    const docData = {
-      s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
-      score: analysisResult.score ?? null,
-      processed: analysisResult.processedUrl ?? null,
-      createdAt: new Date(),
-    };
-
-    // undefined 값이 있는지 확인하고 제거
-    Object.keys(docData).forEach(key => {
-      if (docData[key] === undefined) {
-        delete docData[key];
-      }
-    });
-
-    // Firestore에 기록
+    // Firestore에 문서 생성
     const newDocRef = db
       .collection('users')
       .doc(req.user.uid)
       .collection('shots')
       .doc();
 
-    await newDocRef.set(docData);
+    // 아직 머신러닝 처리는 완료되지 않았으므로 processedUrl 등은 null(또는 undefined -> null)
+    await newDocRef.set({
+      s3Url: `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${s3Key}`,
+      score: analysisResult.score ?? 0,
+      processed: analysisResult.processedUrl ?? null,
+      analysis: null, // 머신러닝 처리 결과가 들어갈 필드(처음엔 null)
+      newUrl: null,   // 머신러닝 처리 후 새 영상을 S3에 업로드하면 여기에 URL 업데이트
+      createdAt: new Date(),
+    });
 
     res.json({
       message: 'Upload & analysis success',
       s3Key,
-      analysisResult,
     });
   } catch (err) {
     console.error('Upload endpoint error:', err);
@@ -141,13 +123,11 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
 });
 
 /**
- * 유저의 업로드 목록을 불러오는 API
- * 클라이언트는 헤더에 Firebase 토큰을 넣어서 GET /api/user-shots 요청
+ * 유저 업로드 목록 조회
  */
 app.get('/api/user-shots', verifyAuthToken, async (req, res) => {
   try {
     const userId = req.user.uid;
-
     const shotsRef = db
       .collection('users')
       .doc(userId)

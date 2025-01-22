@@ -8,10 +8,10 @@ import {
   VStack,
 } from '@chakra-ui/react';
 import axios from 'axios';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import Navbar from '../components/Navbar';
+import Navbar from '../components/Navbar'; // 예시
 import { auth } from '../firebaseConfig';
 
 export default function UploadPage() {
@@ -20,8 +20,7 @@ export default function UploadPage() {
   const toast = useToast();
   const navigate = useNavigate();
 
-  // 스크롤 이벤트 (헤더 전환 여부)
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50) {
         setHeaderType('header2');
@@ -59,7 +58,7 @@ export default function UploadPage() {
     }
 
     try {
-      // Firebase 토큰 가져오기
+      // Firebase 토큰
       const token = await auth.currentUser.getIdToken();
 
       // FormData 구성
@@ -86,7 +85,7 @@ export default function UploadPage() {
         isClosable: true,
       });
 
-      // 업로드 성공 후 페이지 이동(예: /main)
+      // 업로드 후 메인으로 이동 등
       navigate('/main');
     } catch (error: any) {
       console.error(error);
