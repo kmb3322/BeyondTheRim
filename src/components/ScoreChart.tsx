@@ -1,12 +1,12 @@
 // src/components/ScoreChart.tsx
 import {
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Tooltip,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -34,7 +34,8 @@ export default function ScoreChart({ labels, scores }: ScoreChartProps) {
     responsive: true,
     plugins: {
       legend: {
-        display: true,
+        display: false,
+        
       },
     },
   };

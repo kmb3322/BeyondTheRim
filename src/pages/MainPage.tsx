@@ -263,10 +263,15 @@ export default function MainPage() {
 
           {/* 평균 점수 + 차트 */}
           {!loadingShots && shots.length > 0 && (
-            <VStack spacing={4} mt={6} border="1px solid white" p={4} borderRadius="md">
-              <Text fontSize="3xl" fontWeight="bold" color="red.300">
-                나의 평균 점수: {displayScore}
+            <VStack spacing={4} mt={2}  p={4} alignItems={"start"}>
+              <Box ml={3} mb={5} display="flex" flexDirection="row">
+              <Text fontSize={60} fontWeight="bold" color="#f33c3c">
+                {displayScore}
               </Text>
+              <Text fontFamily={'Noto Sans KR'} fontSize={12} ml={2} fontWeight={700} color="#f33c3c" mt={3}>
+                나의 평균점수
+              </Text>
+              </Box>
               <ScoreChart labels={labels} scores={scores} />
             </VStack>
           )}
