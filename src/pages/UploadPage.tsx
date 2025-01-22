@@ -31,7 +31,7 @@ const ImageCarousel: React.FC = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
         setFade(true);
       }, 1000);
-    }, 10000);
+    }, 7000);
     return () => clearInterval(interval);
   }, [images.length]);
 
