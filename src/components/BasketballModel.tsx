@@ -30,7 +30,7 @@ const BasketballModel = forwardRef<BasketballModelHandle>((_, ref) => {
 
   // --- 회전 관성 ---
   const rotationVelocity = useRef({ x: 0, y: 0 });
-  const friction = 0.98;
+  const friction = 0.97;
 
   // --- 바운스 (중력) ---
   const bounceY = useRef(0);
@@ -48,7 +48,7 @@ const BasketballModel = forwardRef<BasketballModelHandle>((_, ref) => {
     // 드래그 중 회전/관성 적용
     applyRotation(deltaX, deltaY) {
       if (!groupRef.current) return;
-      const rotationMultiplier = 0.015;
+      const rotationMultiplier = 0.01;
       // 실제 회전
       groupRef.current.rotation.y += deltaX * rotationMultiplier;
       groupRef.current.rotation.x += deltaY * rotationMultiplier;
