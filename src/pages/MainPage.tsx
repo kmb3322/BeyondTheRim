@@ -30,6 +30,7 @@ type ShotData = {
   newUrl?: string | null; // 머신러닝 처리 후 추가
   processed?: any; // 처리 완료 시간 (Date or Timestamp or null)
   analysis?: string | null; // 분석 결과
+  fbxUrl?: string | null; // fbx 모델 URL
   createdAt?: any; // Firestore Timestamp 또는 Date 또는 string
 };
 

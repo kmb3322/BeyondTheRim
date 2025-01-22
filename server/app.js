@@ -110,6 +110,7 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       processed: analysisResult.processedUrl ?? null,
       analysis: null, // 머신러닝 후 업데이트
       newUrl: null,   // 머신러닝 후 업데이트
+      fbxUrl: null,   // 머신러닝 후 업데이트
       createdAt: new Date(),
     });
 
