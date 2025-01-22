@@ -284,7 +284,7 @@ export default function UploadPage() {
             <Progress
               value={uploadProgress}
               size="sm"
-              colorScheme="rgb(160, 13, 13)"
+              colorScheme="red"
               borderRadius="md"
             />
           )}
