@@ -109,7 +109,7 @@ export default function Navbar({ headerType = 'header1' }: NavbarProps) {
             user && (
               <>
                 <Link to="/upload">
-                  <Button colorScheme="#f33c3c" ml={4} width={16} height={8} borderRadius={5} fontSize={14} borderColor="#f33c3c" color="#f33c3c" fontFamily="Noto Sans KR" variant="outline" zIndex={9999}
+                  <Button colorScheme="#f33c3c" ml={6} width={16} height={8} borderRadius={5} fontSize={14} borderColor="#f33c3c" color="#f33c3c" fontFamily="Noto Sans KR" variant="outline" zIndex={9999}
                  _hover={{
                   color:"black",
                    bg: "#f33c3c", // 커서 올렸을 때의 배경색
