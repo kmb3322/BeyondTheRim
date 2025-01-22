@@ -242,16 +242,19 @@ export default function MainPage() {
             colorScheme="black"
             variant="solid"
             onClick={() => navigate('/upload')}
-            fontFamily="heading"
+            fontFamily="Noto Sans KR"
             boxShadow="0 4px 6px rgba(0, 0, 0, 0.2)"
             bg="#f33c3c"
+            fontWeight={500}
+            fontSize={15}
             color="white"
             _hover={{
               bg: '#d32f2f',
               transform: 'scale(1.02)',
             }}
+            
           >
-            슛 폼 업로드 하기
+            AI 슛 폼 분석하기
           </Button>
 
           {/* Shot 데이터 UI */}
