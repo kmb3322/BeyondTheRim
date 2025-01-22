@@ -313,6 +313,7 @@ export default function MainPage() {
                         icon={<FiRefreshCw />}
                         size="sm"
                         mb={3}
+                        color={"white"}
                         colorScheme="#f33c3c"
                         left="92%"
                         borderRadius="full"
