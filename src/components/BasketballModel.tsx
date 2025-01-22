@@ -1,10 +1,10 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import {
-    forwardRef,
-    useEffect,
-    useImperativeHandle,
-    useRef,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
 } from 'react';
 import * as THREE from 'three';
 
@@ -30,7 +30,7 @@ const BasketballModel = forwardRef<BasketballModelHandle>((_, ref) => {
 
   // --- 회전 관성 ---
   const rotationVelocity = useRef({ x: 0, y: 0 });
-  const friction = 0.95;
+  const friction = 0.98;
 
   // --- 바운스 (중력) ---
   const bounceY = useRef(0);
@@ -48,7 +48,7 @@ const BasketballModel = forwardRef<BasketballModelHandle>((_, ref) => {
     // 드래그 중 회전/관성 적용
     applyRotation(deltaX, deltaY) {
       if (!groupRef.current) return;
-      const rotationMultiplier = 0.005;
+      const rotationMultiplier = 0.015;
       // 실제 회전
       groupRef.current.rotation.y += deltaX * rotationMultiplier;
       groupRef.current.rotation.x += deltaY * rotationMultiplier;
