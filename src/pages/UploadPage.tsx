@@ -224,7 +224,7 @@ export default function UploadPage() {
             mb={-6}
             color="gray.300"
           >
-            초당 165.2FLOPs의 DeepLearning Model을 통해
+            초당 165.2FLOPs의 자체 딥러닝 모델을 통해
           </Text>
           <Text
             fontSize={12}
