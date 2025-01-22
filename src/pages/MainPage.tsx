@@ -265,6 +265,18 @@ export default function MainPage() {
           {/* 평균 점수 + 차트 */}
           {!loadingShots && shots.length > 0 && (
             <VStack spacing={4} mt={2}  p={4} alignItems={"start"}>
+              <IconButton
+                        aria-label="새로고침"
+                        icon={<FiRefreshCw />}
+                        size="sm"
+                        mb={-14}
+                        color={"white"}
+                        colorScheme="#f33c3c"
+                        left="96%"
+                        borderRadius="full"
+                        onClick={() => refreshShot()}
+                        _hover={{ bg: '#f33c3c' }}
+                      />
               <Box ml={3} mb={5} display="flex" flexDirection="row">
               <Text fontSize={60} fontWeight="bold" color="#f33c3c">
                 {displayScore}
@@ -272,6 +284,7 @@ export default function MainPage() {
               <Text fontFamily={'Noto Sans KR'} fontSize={12} ml={2} fontWeight={700} color="#f33c3c" mt={3}>
                 나의 평균점수
               </Text>
+              
               </Box>
               <ScoreChart labels={labels} scores={scores} />
             </VStack>
