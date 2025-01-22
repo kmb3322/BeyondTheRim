@@ -258,7 +258,6 @@ export default function UploadPage() {
           )}
 
           <Button
-            colorScheme="red"
             bg="#f33c3c"
             variant="solid"
             fontWeight={500}
@@ -266,6 +265,12 @@ export default function UploadPage() {
             textColor="white"
             onClick={handleUpload}
             fontFamily="Noto Sans KR"
+            colorScheme="black"
+            boxShadow="0 4px 6px rgba(0, 0, 0, 0.2)"
+            _hover={{
+              bg: '#d32f2f',
+              transform: 'scale(1.02)',
+            }}
           >
             업로드
           </Button>
