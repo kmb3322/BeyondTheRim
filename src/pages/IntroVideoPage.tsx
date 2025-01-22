@@ -1,5 +1,5 @@
 // src/pages/IntroVideoPage.tsx
-import { Box, Button, Image } from '@chakra-ui/react';
+import { Box, Button } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -64,7 +64,7 @@ export default function IntroVideoPage() {
           sx={{
             '@keyframes fadeIn': {
               from: { opacity: 0 },
-              to: { opacity: 0.8 },
+              to: { opacity: 0.7 },
             },
           }}
         >
@@ -76,20 +76,12 @@ export default function IntroVideoPage() {
             onClick={handleStart}
             fontWeight={700}
             textColor={'white'}
-            
+            letterSpacing={6}
             fontFamily="Noto Sans KR"  // Noto Sans KR 폰트 적용
-            leftIcon={(
-              <Image
-                src="/assets/google_logo.png" // public 폴더 내 구글 로고 이미지 경로
-                alt="Google Logo"
-                boxSize="24px"
-                mt={0.5}
-                ml={1}
-              />
-            )}
+            
             justifyContent="center"
           >
-            Sign In With Google
+            시작하기
           </Button>
         </Box>
       )}
