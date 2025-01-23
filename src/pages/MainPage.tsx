@@ -266,7 +266,7 @@ export default function MainPage() {
                 _hover={{ bg: '#f33c3c' }}
                 zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
               />
-              <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center">
+              <Box ml={3} mb={5} display="flex" flexDirection="row">
                 <Text fontSize={60} fontWeight="bold" color="#f33c3c">
                   {displayScore.toFixed(2)}
                 </Text>
@@ -281,7 +281,14 @@ export default function MainPage() {
                   나의 평균점수
                 </Text>
               </Box>
+              <Box borderRadius="12"
+                      overflow="hidden"
+                      p={5}
+                      py={8}
+                      bg="gray.900"
+                      position="relative"> 
               <ScoreChart labels={labels} scores={scores} />
+              </Box>
             </VStack>
           )}
 
@@ -340,18 +347,8 @@ export default function MainPage() {
                         _hover={{ bg: '#f33c3c' }}
                         zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
                       />
-                      <Box mt="25px">
-                      {hasNewUrl ? (
-                        <Flex direction="row" gap={2}>
-                          {videoUrls.map((url, index) => (
-                            <VideoWithAspect key={index} src={url} />
-                          ))}
-                        </Flex>
-                      ) : (
-                        <VideoWithAspect src={shot.s3Url} />
-                      )}
-                      </Box>
-                      <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
+                      
+                      <Box ml={1} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
                         {shot.analysis === '검출 실패' ? (
                           <Text
                             textColor="#f33c3c"
@@ -363,14 +360,15 @@ export default function MainPage() {
                           </Text>
                         ) : hasNewUrl ? (
                           <>
-                            <Text textColor="#f33c3c" fontSize={30}>
+                            <Text textColor="#f33c3c" fontSize={35}>
                               {shot.score !== null ? shot.score.toFixed(2) : '0.00'}
                             </Text>
                             <Text
                               textColor="#f33c3c"
                               fontFamily="Noto Sans KR"
                               fontWeight={700}
-                              mt={1}
+                              mt={-5}
+                              ml={1}
                               fontSize={16}
                             >
                               점
@@ -386,6 +384,17 @@ export default function MainPage() {
                             분석 중
                           </Text>
                         )}
+                      </Box>
+                      <Box mt="-3">
+                      {hasNewUrl ? (
+                        <Flex direction="row" gap={2}>
+                          {videoUrls.map((url, index) => (
+                            <VideoWithAspect key={index} src={url} />
+                          ))}
+                        </Flex>
+                      ) : (
+                        <VideoWithAspect src={shot.s3Url} />
+                      )}
                       </Box>
                     </GridItem>
                   );
