@@ -1,6 +1,5 @@
 // client/src/pages/MainPage.tsx
 import {
-  AspectRatio,
   Box,
   Button,
   Container,
@@ -20,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import BasketballScene from '../components/BasketballScene';
 import Navbar from '../components/Navbar';
 import ScoreChart from '../components/ScoreChart';
+import VideoWithAspect from '../components/VideoWithAspect';
 import { auth } from '../firebaseConfig';
 
 // Firestore에서 가져온 shot 문서 타입
@@ -93,32 +93,15 @@ export default function MainPage() {
   }, []);
 
   // -------------------------------------------------------------
-  // 3) 차트용 날짜 라벨, 점수
+  // 3) 차트용 날짜 라벨, 점수 (Updated to exclude 0 scores and '검출 실패')
   // -------------------------------------------------------------
 
-  // 안전하게 Date 객체로 변환하는 함수
-  function parseFirestoreDate(field: any): Date | null {
-    if (!field) return null;
+  // Filter out shots with '검출 실패' and scores <= 0
+  const validShots = shots.filter(
+    (shot) => shot.score && shot.score > 0 && shot.analysis !== '검출 실패'
+  );
 
-    // Firestore Timestamp 객체 형태인지 확인
-    if (field.seconds && typeof field.seconds === 'number') {
-      return new Date(field.seconds * 1000);
-    }
-    // 혹은 _seconds?
-    if (field._seconds && typeof field._seconds === 'number') {
-      return new Date(field._seconds * 1000);
-    }
-
-    // 만약 그냥 문자열로 저장된 경우
-    const dateObj = new Date(field);
-    if (isNaN(dateObj.getTime())) {
-      return null; // 파싱 실패
-    }
-    return dateObj;
-  }
-
-  // x축 라벨
-  const labels = shots.map((shot) => {
+  const labels = validShots.map((shot) => {
     const parsedDate = parseFirestoreDate(shot.createdAt);
     if (parsedDate) {
       return parsedDate.toLocaleDateString('ko-KR'); // "2025. 1. 22." 등
@@ -126,18 +109,19 @@ export default function MainPage() {
     return 'Unknown';
   });
 
-  // 점수 배열
-  const scores = shots.map((shot) => shot.score ?? 0);
+  const scores = validShots.map((shot) =>
+    shot.score !== null ? Math.round(shot.score * 100) / 100 : 0
+  );
 
-  // 평균 점수
+  // 평균 점수 (exclude 0 scores and '검출 실패')
   const averageScore = scores.length
-    ? Math.round(scores.reduce((sum, cur) => sum + cur, 0) / scores.length)
+    ? Math.round((scores.reduce((sum, cur) => sum + cur, 0) / scores.length) * 100) / 100
     : 0;
 
   // -------------------------------------------------------------
-  // 4) 평균 점수 카운트업 애니메이션
+  // 4) 평균 점수 카운트업 애니메이션 (Updated to handle decimals)
   // -------------------------------------------------------------
-  const [displayScore, setDisplayScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState<number>(0);
   const requestRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
 
@@ -151,7 +135,7 @@ export default function MainPage() {
         startTimeRef.current = timestamp;
       }
       const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
-      const val = Math.floor(progress * averageScore);
+      const val = parseFloat((progress * averageScore).toFixed(2));
       setDisplayScore(val);
 
       if (progress < 1) {
@@ -190,7 +174,9 @@ export default function MainPage() {
 
   const navigate = useNavigate();
   const refreshShot = async () => {
+    setLoadingShots(true);
     await fetchShots(); // 전체 목록 업데이트 (각 shot의 newUrl 등 최신 상태 반영)
+    setLoadingShots(false);
   };
 
   return (
@@ -252,7 +238,6 @@ export default function MainPage() {
               bg: '#d32f2f',
               transform: 'scale(1.02)',
             }}
-            
           >
             AI 슛 폼 분석하기
           </Button>
@@ -266,28 +251,34 @@ export default function MainPage() {
           )}
 
           {/* 평균 점수 + 차트 */}
-          {!loadingShots && shots.length > 0 && (
-            <VStack spacing={4} mt={2}  p={4} alignItems={"start"}>
+          {!loadingShots && validShots.length > 0 && (
+            <VStack spacing={4} mt={2} p={4} alignItems="start">
               <IconButton
-                        aria-label="새로고침"
-                        icon={<FiRefreshCw />}
-                        size="sm"
-                        mb={-14}
-                        color={"white"}
-                        colorScheme="#f33c3c"
-                        left="96%"
-                        borderRadius="full"
-                        onClick={() => refreshShot()}
-                        _hover={{ bg: '#f33c3c' }}
-                      />
-              <Box ml={3} mb={5} display="flex" flexDirection="row">
-              <Text fontSize={60} fontWeight="bold" color="#f33c3c">
-                {displayScore}
-              </Text>
-              <Text fontFamily={'Noto Sans KR'} fontSize={12} ml={2} fontWeight={700} color="#f33c3c" mt={3}>
-                나의 평균점수
-              </Text>
-              
+                aria-label="새로고침"
+                icon={<FiRefreshCw />}
+                size="sm"
+                mb={-14}
+                color="white"
+                colorScheme="red"
+                left="96%"
+                borderRadius="full"
+                onClick={() => refreshShot()}
+                _hover={{ bg: '#f33c3c' }}
+              />
+              <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center">
+                <Text fontSize={60} fontWeight="bold" color="#f33c3c">
+                  {displayScore.toFixed(2)}
+                </Text>
+                <Text
+                  fontFamily="Noto Sans KR"
+                  fontSize={12}
+                  ml={2}
+                  fontWeight={700}
+                  color="#f33c3c"
+                  mt={3}
+                >
+                  나의 평균점수
+                </Text>
               </Box>
               <ScoreChart labels={labels} scores={scores} />
             </VStack>
@@ -299,7 +290,13 @@ export default function MainPage() {
 
           {/* 영상 갤러리 */}
           <Box mt={6}>
-            <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} fontSize={30} mb={2}>
+            <Text
+              textColor="#f33c3c"
+              fontFamily="Noto Sans KR"
+              fontWeight={700}
+              fontSize={30}
+              mb={2}
+            >
               나의 슛 영상 갤러리
             </Text>
 
@@ -323,42 +320,59 @@ export default function MainPage() {
                       borderRadius="md"
                       overflow="hidden"
                       p={2}
+                      bg="blackAlpha.700"
+                      position="relative"
                     >
                       <IconButton
                         aria-label="새로고침"
                         icon={<FiRefreshCw />}
                         size="sm"
                         mb={3}
-                        color={"white"}
-                        colorScheme="#f33c3c"
-                        left="92%"
+                        color="white"
+                        colorScheme="red"
+                        position="absolute"
+                        top="10px"
+                        right="10px"
                         borderRadius="full"
                         onClick={() => refreshShot()}
                         _hover={{ bg: '#f33c3c' }}
                       />
-                      <AspectRatio ratio={16 / 9}>
-                        <video
-                          src={videoUrl}
-                          controls
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      </AspectRatio>
-                      <Box ml={3} mb={5} display="flex" flexDirection="row">
-                      {hasNewUrl && (
-                    <Text textColor={"#f33c3c"} fontSize={30}>{shot.score}</Text>
-                     )}
-                      {hasNewUrl && (
-                    <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} mt={1} fontSize={16}>점</Text>
-                     )}
-                     
-                      {!hasNewUrl && (
-                    <Text textColor={"#f33c3c"} fontFamily={'Noto Sans KR'} fontWeight={700} fontSize={22}>분석 중</Text>
-                     )}
-                      
-
-                      
-                      
-                      
+                      <VideoWithAspect src={videoUrl} />
+                      <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center">
+                        {shot.analysis === '검출 실패' ? (
+                          <Text
+                            textColor="#f33c3c"
+                            fontFamily="Noto Sans KR"
+                            fontWeight={700}
+                            fontSize={22}
+                          >
+                            슛 폼이 검출되지 않음
+                          </Text>
+                        ) : hasNewUrl ? (
+                          <>
+                            <Text textColor="#f33c3c" fontSize={30}>
+                              {shot.score !== null ? shot.score.toFixed(2) : '0.00'}
+                            </Text>
+                            <Text
+                              textColor="#f33c3c"
+                              fontFamily="Noto Sans KR"
+                              fontWeight={700}
+                              mt={1}
+                              fontSize={16}
+                            >
+                              점
+                            </Text>
+                          </>
+                        ) : (
+                          <Text
+                            textColor="#f33c3c"
+                            fontFamily="Noto Sans KR"
+                            fontWeight={700}
+                            fontSize={22}
+                          >
+                            분석 중
+                          </Text>
+                        )}
                       </Box>
                     </GridItem>
                   );
@@ -373,4 +387,25 @@ export default function MainPage() {
       </Container>
     </Box>
   );
+}
+
+// 안전하게 Date 객체로 변환하는 함수
+function parseFirestoreDate(field: any): Date | null {
+  if (!field) return null;
+
+  // Firestore Timestamp 객체 형태인지 확인
+  if (field.seconds && typeof field.seconds === 'number') {
+    return new Date(field.seconds * 1000);
+  }
+  // 혹은 _seconds?
+  if (field._seconds && typeof field._seconds === 'number') {
+    return new Date(field._seconds * 1000);
+  }
+
+  // 만약 그냥 문자열로 저장된 경우
+  const dateObj = new Date(field);
+  if (isNaN(dateObj.getTime())) {
+    return null; // 파싱 실패
+  }
+  return dateObj;
 }
