@@ -1,4 +1,3 @@
-// client/src/components/VideoWithAspect.tsx
 import { AspectRatio, Box, IconButton } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 import { FiPause, FiPlay } from 'react-icons/fi';
@@ -9,26 +8,8 @@ type VideoWithAspectProps = {
 
 const VideoWithAspect: React.FC<VideoWithAspectProps> = ({ src }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<number>(16 / 9);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (video) {
-      const handleLoadedMetadata = () => {
-        const { videoWidth, videoHeight } = video;
-        if (videoHeight > videoWidth) {
-          setAspectRatio(3 / 4); // Portrait
-        } else {
-          setAspectRatio(4 / 3); // Landscape
-        }
-      };
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      return () => {
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      };
-    }
-  }, [src]);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -43,31 +24,64 @@ const VideoWithAspect: React.FC<VideoWithAspectProps> = ({ src }) => {
     }
   };
 
+  // 자동으로 플레이 상태 업데이트
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      const handlePlay = () => setIsPlaying(true);
+      const handlePause = () => setIsPlaying(false);
+
+      video.addEventListener('play', handlePlay);
+      video.addEventListener('pause', handlePause);
+
+      return () => {
+        video.removeEventListener('play', handlePlay);
+        video.removeEventListener('pause', handlePause);
+      };
+    }
+  }, []);
+
   return (
-    <Box position="relative">
-      <AspectRatio ratio={aspectRatio} width="100%">
+    <Box
+      position="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      borderRadius="8px"
+      overflow="hidden"
+      boxShadow="md"
+      cursor="pointer"
+      flex="1"
+    >
+      <AspectRatio ratio={3 / 4} width="100%">
         <video
           ref={videoRef}
           src={src}
-          style={{ borderRadius: '8px' }}
+          style={{ borderRadius: '12px', objectFit: 'cover' }}
           muted
           // Remove default controls
           controls={false}
         />
       </AspectRatio>
-      <IconButton
-        icon={isPlaying ? <FiPause /> : <FiPlay />}
-        aria-label="Play/Pause"
-        size="lg"
-        colorScheme="red"
-        position="absolute"
-        top="50%"
-        left="50%"
-        transform="translate(-50%, -50%)"
-        opacity="0.8"
-        onClick={togglePlay}
-        _hover={{ opacity: 1 }}
-      />
+      {/* 재생/일시정지 버튼을 호버 시에만 표시 */}
+      {(isHovered || isPlaying) && (
+        <IconButton
+          icon={isPlaying ? <FiPause /> : <FiPlay />}
+          aria-label="Play/Pause"
+          size="lg"
+          colorScheme="red"
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+          opacity="0.8"
+          onClick={togglePlay}
+          _hover={{ opacity: 1 }}
+          bg="rgba(0, 0, 0, 0.6)"
+          color="white"
+          borderRadius="full"
+          zIndex={1}
+        />
+      )}
     </Box>
   );
 };

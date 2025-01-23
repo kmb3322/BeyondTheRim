@@ -1,8 +1,8 @@
-// client/src/pages/MainPage.tsx
 import {
   Box,
   Button,
   Container,
+  Flex,
   Grid,
   GridItem,
   IconButton,
@@ -252,18 +252,19 @@ export default function MainPage() {
 
           {/* 평균 점수 + 차트 */}
           {!loadingShots && validShots.length > 0 && (
-            <VStack spacing={4} mt={2} p={4} alignItems="start">
+            <VStack spacing={4} mt={2} p={4} alignItems="start" position="relative">
               <IconButton
                 aria-label="새로고침"
                 icon={<FiRefreshCw />}
                 size="sm"
-                mb={-14}
-                color="white"
-                colorScheme="red"
-                left="96%"
+                position="absolute"
+                top="10px"
+                right="10px"
                 borderRadius="full"
+                colorScheme='black'
                 onClick={() => refreshShot()}
                 _hover={{ bg: '#f33c3c' }}
+                zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
               />
               <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center">
                 <Text fontSize={60} fontWeight="bold" color="#f33c3c">
@@ -310,35 +311,43 @@ export default function MainPage() {
               <Grid templateColumns="repeat(auto-fill, minmax(250px, 1fr))" gap={4}>
                 {shots.map((shot) => {
                   const hasNewUrl = shot.newUrl && shot.newUrl !== null;
-                  // newUrl이 있으면 그걸, 아니면 원본 s3Url
-                  const videoUrl = hasNewUrl ? shot.newUrl! : shot.s3Url;
+                  const videoUrls = hasNewUrl ? [shot.s3Url, shot.newUrl!] : [shot.s3Url];
 
                   return (
                     <GridItem
                       key={shot.id}
-                      border="1px solid white"
-                      borderRadius="md"
+                      borderRadius="12"
                       overflow="hidden"
-                      p={2}
-                      bg="blackAlpha.700"
+                      p={5}
+                      bg="gray.900"
                       position="relative"
+                      //boxShadow="0 2px 2px black"
+
                     >
+                      {/* 새로고침 버튼의 zIndex를 높게 설정 */}
                       <IconButton
                         aria-label="새로고침"
                         icon={<FiRefreshCw />}
                         size="sm"
-                        mb={3}
-                        color="white"
-                        colorScheme="red"
                         position="absolute"
                         top="10px"
                         right="10px"
+                        colorScheme='black'
                         borderRadius="full"
                         onClick={() => refreshShot()}
                         _hover={{ bg: '#f33c3c' }}
+                        zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
                       />
-                      <VideoWithAspect src={videoUrl} />
-                      <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center">
+                      {hasNewUrl ? (
+                        <Flex direction="row" gap={2}>
+                          {videoUrls.map((url, index) => (
+                            <VideoWithAspect key={index} src={url} />
+                          ))}
+                        </Flex>
+                      ) : (
+                        <VideoWithAspect src={shot.s3Url} />
+                      )}
+                      <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
                         {shot.analysis === '검출 실패' ? (
                           <Text
                             textColor="#f33c3c"

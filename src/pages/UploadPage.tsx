@@ -250,59 +250,7 @@ export default function UploadPage() {
 
           {/* 이미지 및 텍스트가 함께 페이드 효과로 전환되는 캐러셀 */}
           <ImageCarousel />
-
-          {/* handedness 선택 버튼 추가 */}
-          <Box>
-            <Text
-              fontSize={16}
-              fontFamily="Noto Sans KR"
-              fontWeight={600}
-              color="#f33c3c"
-              mb={2}
-            >
-              손 사용 여부:
-            </Text>
-            <HStack spacing={4}>
-              <Button
-                bg={handedness === 'left' ? '#f33c3c' : 'transparent'}
-                color={handedness === 'left' ? 'black' : '#f33c3c'}
-                border="1px solid #f33c3c"
-                fontWeight={600}
-                fontSize="12px"
-                borderRadius="full"
-                padding="4px 12px"
-                onClick={() => handleHandednessChange('left')}
-                _hover={{
-                  bg: '#f33c3c',
-                  color: 'black',
-                  transform: 'scale(1.05)',
-                }}
-                transition="all 0.2s"
-              >
-                왼손잡이
-              </Button>
-              <Button
-                bg={handedness === 'right' ? '#f33c3c' : 'transparent'}
-                color={handedness === 'right' ? 'black' : '#f33c3c'}
-                border="1px solid #f33c3c"
-                fontWeight={600}
-                fontSize="12px"
-                borderRadius="full"
-                padding="4px 12px"
-                onClick={() => handleHandednessChange('right')}
-                _hover={{
-                  bg: '#f33c3c',
-                  color: 'black',
-                  transform: 'scale(1.05)',
-                }}
-                transition="all 0.2s"
-              >
-                오른손잡이
-              </Button>
-            </HStack>
-          </Box>
-
-          <Box >
+          <Box mt={-3} >
             <Flex alignItems="center" justify={"center"}>
               <input
                 type="file"
@@ -349,6 +297,53 @@ export default function UploadPage() {
               borderRadius="md"
             />
           )}
+
+          {/* handedness 선택 버튼 추가 */}
+          <Box mb={3}>
+
+            <HStack spacing={4} alignItems="center" justify={"center"}>
+              <Button
+                bg={handedness === 'left' ? '#f33c3c' : 'transparent'}
+                color={handedness === 'left' ? 'black' : '#f33c3c'}
+                border="1px solid #f33c3c"
+                fontWeight={600}
+                fontSize="12px"
+                borderRadius="full"
+                padding="4px 12px"
+                onClick={() => handleHandednessChange('left')}
+                _hover={{
+                  bg: '#f33c3c',
+                  color: 'black',
+                  transform: 'scale(1.05)',
+                }}
+                transition="all 0.2s"
+              >
+                왼손잡이
+              </Button>
+              <Button
+                bg={handedness === 'right' ? '#f33c3c' : 'transparent'}
+                color={handedness === 'right' ? 'black' : '#f33c3c'}
+                border="1px solid #f33c3c"
+                fontWeight={600}
+                fontSize="12px"
+                borderRadius="full"
+                padding="4px 12px"
+                onClick={() => handleHandednessChange('right')}
+                _hover={{
+                  bg: '#f33c3c',
+                  color: 'black',
+                  transform: 'scale(1.05)',
+                }}
+                transition="all 0.2s"
+              >
+                오른손잡이
+              </Button>
+            </HStack>
+          </Box>
+
+          
+
+          
 
           <Button
             bg="#f33c3c"
