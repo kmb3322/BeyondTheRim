@@ -283,6 +283,7 @@ export default function MainPage() {
               </Box>
               <Box borderRadius="12"
                       overflow="hidden"
+                      width="100%"
                       p={5}
                       py={8}
                       bg="gray.900"
