@@ -4,6 +4,7 @@ import {
   Button,
   Container,
   Flex,
+  HStack,
   Image,
   Progress,
   Text,
@@ -88,6 +89,7 @@ export default function UploadPage() {
   const [headerType, setHeaderType] = useState<'header1' | 'header2'>('header1');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [handedness, setHandedness] = useState<'left' | 'right'>('right'); // 추가: handedness 상태
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -111,6 +113,13 @@ export default function UploadPage() {
     if (e.target.files && e.target.files.length > 0) {
       setVideoFile(e.target.files[0]);
     }
+  };
+
+  /**
+   * handedness 선택 핸들러
+   */
+  const handleHandednessChange = (hand: 'left' | 'right') => {
+    setHandedness(hand);
   };
 
   /**
@@ -154,6 +163,7 @@ export default function UploadPage() {
       // FormData 구성
       const formData = new FormData();
       formData.append('video', videoFile);
+      formData.append('hand', handedness); // 추가: handedness 필드 추가
 
       // 서버 업로드 요청 + 진행률 감시
       const response = await axios.post(
@@ -241,42 +251,93 @@ export default function UploadPage() {
           {/* 이미지 및 텍스트가 함께 페이드 효과로 전환되는 캐러셀 */}
           <ImageCarousel />
 
-          <Box >
-          <Flex alignItems="center" justify={"center"}>
-          <input
-            type="file"
-            accept="video/*"
-            id="file-upload"
-            onChange={handleFileChange}
-            style={{ display: 'none' }} // input 숨김
-          />
-          <label htmlFor="file-upload">
-            <Button
-              as="span"
-              bg="transparent"
-              colorScheme="black"
-              border="1px solid #f33c3c"
+          {/* handedness 선택 버튼 추가 */}
+          <Box>
+            <Text
+              fontSize={16}
+              fontFamily="Noto Sans KR"
               fontWeight={600}
-              fontSize="12px"
-              textColor="#f33c3c"
-              borderRadius="full"
-              padding="4px 12px"
-              _hover={{
-                bg: '#f33c3c',
-                color: 'black',
-                transform: 'scale(1.05)',
-              }}
-              transition="all 0.2s"
+              color="#f33c3c"
+              mb={2}
             >
-              업로드할 파일 선택
-            </Button>
-          </label>
-          {videoFile && (
-        <Text ml={3} fontSize={14} fontFamily="Noto Sans KR" fontWeight={700} color="#f33c3c">
-          {videoFile.name}
-        </Text>
-      )}
-      </Flex>
+              손 사용 여부:
+            </Text>
+            <HStack spacing={4}>
+              <Button
+                bg={handedness === 'left' ? '#f33c3c' : 'transparent'}
+                color={handedness === 'left' ? 'black' : '#f33c3c'}
+                border="1px solid #f33c3c"
+                fontWeight={600}
+                fontSize="12px"
+                borderRadius="full"
+                padding="4px 12px"
+                onClick={() => handleHandednessChange('left')}
+                _hover={{
+                  bg: '#f33c3c',
+                  color: 'black',
+                  transform: 'scale(1.05)',
+                }}
+                transition="all 0.2s"
+              >
+                왼손잡이
+              </Button>
+              <Button
+                bg={handedness === 'right' ? '#f33c3c' : 'transparent'}
+                color={handedness === 'right' ? 'black' : '#f33c3c'}
+                border="1px solid #f33c3c"
+                fontWeight={600}
+                fontSize="12px"
+                borderRadius="full"
+                padding="4px 12px"
+                onClick={() => handleHandednessChange('right')}
+                _hover={{
+                  bg: '#f33c3c',
+                  color: 'black',
+                  transform: 'scale(1.05)',
+                }}
+                transition="all 0.2s"
+              >
+                오른손잡이
+              </Button>
+            </HStack>
+          </Box>
+
+          <Box >
+            <Flex alignItems="center" justify={"center"}>
+              <input
+                type="file"
+                accept="video/*"
+                id="file-upload"
+                onChange={handleFileChange}
+                style={{ display: 'none' }} // input 숨김
+              />
+              <label htmlFor="file-upload">
+                <Button
+                  as="span"
+                  bg="transparent"
+                  colorScheme="black"
+                  border="1px solid #f33c3c"
+                  fontWeight={600}
+                  fontSize="12px"
+                  textColor="#f33c3c"
+                  borderRadius="full"
+                  padding="4px 12px"
+                  _hover={{
+                    bg: '#f33c3c',
+                    color: 'black',
+                    transform: 'scale(1.05)',
+                  }}
+                  transition="all 0.2s"
+                >
+                  업로드할 파일 선택
+                </Button>
+              </label>
+              {videoFile && (
+                <Text ml={3} fontSize={14} fontFamily="Noto Sans KR" fontWeight={700} color="#f33c3c">
+                  {videoFile.name}
+                </Text>
+              )}
+            </Flex>
           </Box>
 
           {/* 업로드 진행률 표시 */}

@@ -24,12 +24,24 @@ const uploadDir =
   process.env.NODE_ENV === 'production' ? '/tmp' : path.join(__dirname, 'uploads');
 
 // Multer 설정: 파일 크기 제한 100MB
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // 원본 파일 이름을 유지하거나 원하는 형식으로 변경 가능
+    cb(null, `${Date.now()}_${file.originalname}`);
+  },
+});
+
 const upload = multer({
-  dest: uploadDir,
+  storage: storage,
   limits: { fileSize: 100 * 1024 * 1024 },
 });
 
-// 헬스 체크
+/**
+ * 헬스 체크
+ */
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -58,6 +70,12 @@ async function verifyAuthToken(req, res, next) {
  */
 app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (req, res) => {
   try {
+    // 'hand' 필드 검증
+    const hand = req.body.hand;
+    if (!hand || (hand !== 'left' && hand !== 'right')) {
+      return res.status(400).json({ message: 'Invalid or missing "hand" field. It must be either "left" or "right".' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
@@ -94,8 +112,8 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
     // 임시파일 삭제
     fs.unlinkSync(req.file.path);
 
-    // 간단 분석 (서버 측): runAnalysis
-    const analysisResult = await runAnalysis(s3Key);
+    // 간단 분석 (서버 측): runAnalysis에 'hand' 정보 전달
+    const analysisResult = await runAnalysis(s3Key, hand); // 수정: 'hand' 전달
 
     // Firestore에 문서 생성
     const newDocRef = db
@@ -111,6 +129,7 @@ app.post('/api/upload-video', verifyAuthToken, upload.single('video'), async (re
       analysis: null, // 머신러닝 후 업데이트
       newUrl: null,   // 머신러닝 후 업데이트
       fbxUrl: null,   // 머신러닝 후 업데이트
+      hand: hand, // 추가: handedness 정보 저장
       createdAt: new Date(),
     });
 
