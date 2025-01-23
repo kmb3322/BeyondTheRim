@@ -1,3 +1,4 @@
+// client/src/pages/MainPage.tsx
 import {
   Box,
   Button,
@@ -9,10 +10,10 @@ import {
   Spinner,
   Text,
   useToast,
-  VStack,
+  VStack
 } from '@chakra-ui/react';
 import axios from 'axios';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FiRefreshCw } from 'react-icons/fi'; // 새로고침 아이콘
 import { useNavigate } from 'react-router-dom';
 
@@ -29,7 +30,18 @@ type ShotData = {
   score: number | null;
   newUrl?: string | null; // 머신러닝 처리 후 추가
   processed?: any; // 처리 완료 시간 (Date or Timestamp or null)
-  analysis?: string | null; // 분석 결과
+  analysis?: {
+    success: boolean;
+    overall_similarity: number;
+    major_differences: string[];
+    detailed_analysis: {
+      [key: string]: {
+        difference: number | null;
+        feedback: string;
+      };
+    };
+    output_video_path: string;
+  } | null;
   fbxUrl?: string | null; // fbx 모델 URL
   createdAt?: any; // Firestore Timestamp 또는 Date 또는 string
 };
@@ -73,6 +85,7 @@ export default function MainPage() {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/user-shots`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('Fetched shots:', res.data.shots); // 디버깅용 로그 추가
       setShots(res.data.shots);
     } catch (err) {
       console.error(err);
@@ -98,7 +111,7 @@ export default function MainPage() {
 
   // Filter out shots with '검출 실패' and scores <= 0
   const validShots = shots.filter(
-    (shot) => shot.score && shot.score > 0 && shot.analysis !== '검출 실패'
+    (shot) => shot.score && shot.score > 0 && shot.analysis?.success !== false
   );
 
   const labels = validShots.map((shot) => {
@@ -288,7 +301,7 @@ export default function MainPage() {
                       py={8}
                       bg="gray.900"
                       position="relative"> 
-              <ScoreChart labels={labels} scores={scores} />
+                <ScoreChart labels={labels} scores={scores} />
               </Box>
             </VStack>
           )}
@@ -321,6 +334,36 @@ export default function MainPage() {
                   const hasNewUrl = shot.newUrl && shot.newUrl !== null;
                   const videoUrls = hasNewUrl ? [shot.s3Url, shot.newUrl!] : [shot.s3Url];
 
+                  // 피드백 추출: difference가 null이 아니고 0.07보다 큰 항목의 feedback
+                  const feedbacks = shot.analysis?.detailed_analysis
+                    ? Object.values(shot.analysis.detailed_analysis)
+                        .filter(
+                          (item) =>
+                            item.difference !== null && item.difference > 0.08
+                        )
+                        .map((item, index) => (
+                          <Box
+                            key={index}
+                            bg="gray.800"
+                            color="gray.400"
+                            px={3}
+                            py={2}
+                            borderRadius={10}
+                            fontSize={14}
+                            width="100%"
+                            fontWeight={500}
+                            wordBreak="break-word"
+                          >
+                            {item.feedback.split('. ').map((sentence, idx) => (
+                              <React.Fragment key={idx}>
+                                {sentence.trim()}.{/* 마침표 추가 */}
+                                <br />
+                              </React.Fragment>
+                            ))}
+                          </Box>
+                        ))
+                    : [];
+
                   return (
                     <GridItem
                       key={shot.id}
@@ -329,8 +372,6 @@ export default function MainPage() {
                       p={5}
                       bg="gray.900"
                       position="relative"
-                      //boxShadow="0 2px 2px black"
-
                     >
                       {/* 새로고침 버튼의 zIndex를 높게 설정 */}
                       <IconButton
@@ -340,7 +381,6 @@ export default function MainPage() {
                         position="absolute"
                         top="8px"
                         right="10px"
-                        
                         color="white"
                         colorScheme='black'
                         borderRadius="full"
@@ -350,7 +390,7 @@ export default function MainPage() {
                       />
                       
                       <Box ml={1} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
-                        {shot.analysis === '검출 실패' ? (
+                        {shot.analysis?.success === false ? (
                           <Text
                             textColor="#f33c3c"
                             fontFamily="Noto Sans KR"
@@ -387,16 +427,28 @@ export default function MainPage() {
                         )}
                       </Box>
                       <Box mt="5">
-                      {hasNewUrl ? (
-                        <Flex direction="row" gap={2}>
-                          {videoUrls.map((url, index) => (
-                            <VideoWithAspect key={index} src={url} />
-                          ))}
-                        </Flex>
-                      ) : (
-                        <VideoWithAspect src={shot.s3Url} />
-                      )}
+                        {hasNewUrl ? (
+                          <Flex direction="row" gap={2}>
+                            {videoUrls.map((url, index) => (
+                              <VideoWithAspect key={index} src={url} />
+                            ))}
+                          </Flex>
+                        ) : (
+                          <VideoWithAspect src={shot.s3Url} />
+                        )}
                       </Box>
+
+                      {/* 피드백 표시 */}
+                      {feedbacks.length > 0 && (
+                        <Box mt={4}>
+                          <Text mb={2} color="#f33c3c" letterSpacing={0}>
+                            feedback
+                          </Text>
+                          <VStack align="start" spacing={2}>
+                            {feedbacks}
+                          </VStack>
+                        </Box>
+                      )}
                     </GridItem>
                   );
                 })}
