@@ -330,7 +330,7 @@ export default function MainPage() {
                         icon={<FiRefreshCw />}
                         size="sm"
                         position="absolute"
-                        top="10px"
+                        top="8px"
                         right="10px"
                         
                         color="white"
@@ -340,7 +340,7 @@ export default function MainPage() {
                         _hover={{ bg: '#f33c3c' }}
                         zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
                       />
-                      <Box mt="40px">
+                      <Box mt="25px">
                       {hasNewUrl ? (
                         <Flex direction="row" gap={2}>
                           {videoUrls.map((url, index) => (
