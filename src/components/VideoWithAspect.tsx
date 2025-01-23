@@ -41,6 +41,34 @@ const VideoWithAspect: React.FC<VideoWithAspectProps> = ({ src }) => {
     }
   }, []);
 
+  // Intersection Observer를 사용하여 자동 재생/일시정지
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleIntersection: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          video.play().catch((error) => {
+            console.error('Error attempting to play', error);
+          });
+        } else {
+          video.pause();
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(handleIntersection, {
+      threshold: 0.5, // 영상의 50% 이상이 보일 때 재생
+    });
+
+    observer.observe(video);
+
+    return () => {
+      observer.unobserve(video);
+    };
+  }, []);
+
   return (
     <Box
       position="relative"

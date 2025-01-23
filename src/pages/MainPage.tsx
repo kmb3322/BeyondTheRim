@@ -332,12 +332,15 @@ export default function MainPage() {
                         position="absolute"
                         top="10px"
                         right="10px"
+                        
+                        color="white"
                         colorScheme='black'
                         borderRadius="full"
                         onClick={() => refreshShot()}
                         _hover={{ bg: '#f33c3c' }}
                         zIndex={2} // 비디오 UI보다 위에 표시되도록 설정
                       />
+                      <Box mt="40px">
                       {hasNewUrl ? (
                         <Flex direction="row" gap={2}>
                           {videoUrls.map((url, index) => (
@@ -347,6 +350,7 @@ export default function MainPage() {
                       ) : (
                         <VideoWithAspect src={shot.s3Url} />
                       )}
+                      </Box>
                       <Box ml={3} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
                         {shot.analysis === '검출 실패' ? (
                           <Text
