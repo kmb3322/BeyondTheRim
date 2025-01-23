@@ -283,7 +283,7 @@ export default function UploadPage() {
                 </Button>
               </label>
               {videoFile && (
-                <Text ml={3} fontSize={14} fontFamily="Noto Sans KR" fontWeight={700} color="#f33c3c">
+                <Text ml={3} mt={2.5} fontSize={14} fontFamily="Noto Sans KR" fontWeight={700} color="#f33c3c">
                   {videoFile.name}
                 </Text>
               )}
