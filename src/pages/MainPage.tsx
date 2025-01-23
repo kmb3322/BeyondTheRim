@@ -385,7 +385,7 @@ export default function MainPage() {
                           </Text>
                         )}
                       </Box>
-                      <Box mt="-3">
+                      <Box mt="5">
                       {hasNewUrl ? (
                         <Flex direction="row" gap={2}>
                           {videoUrls.map((url, index) => (
