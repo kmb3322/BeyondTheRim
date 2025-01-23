@@ -75,7 +75,8 @@ PC의 경우 마우스로 부드럽게 3D 농구공을 움직일 수 있으며, 
 > Firebase Auth
 > 
 > Firestore DB
-> 
+>
+> AWS S3
 
 ![nodejs.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/f6cb388f-3934-47d6-9928-26d2e10eb0fc/aa7aadcf-db98-4440-a861-9f247db5c82e/nodejs.png)
 
