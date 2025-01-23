@@ -86,8 +86,11 @@ const VideoWithAspect: React.FC<VideoWithAspectProps> = ({ src }) => {
           src={src}
           style={{ borderRadius: '12px', objectFit: 'cover' }}
           muted
-          // Remove default controls
+          // 기본 컨트롤 제거
           controls={false}
+          // iOS 사파리에서 전체화면 전환을 방지하기 위한 속성 추가
+          playsInline
+          webkit-playsinline="true"
         />
       </AspectRatio>
       {/* 재생/일시정지 버튼을 호버 시에만 표시 */}
