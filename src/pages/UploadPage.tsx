@@ -251,7 +251,7 @@ export default function UploadPage() {
           {/* 이미지 및 텍스트가 함께 페이드 효과로 전환되는 캐러셀 */}
           <ImageCarousel />
           <Box mt={-3} >
-            <Flex alignItems="center" justify={"center"}>
+            <Flex alignItems="start" justify={"start"}>
               <input
                 type="file"
                 accept="video/*"
@@ -269,6 +269,8 @@ export default function UploadPage() {
                   fontSize="12px"
                   textColor="#f33c3c"
                   borderRadius="full"
+                  width="20"
+                  mb={-2}
                   padding="4px 12px"
                   _hover={{
                     bg: '#f33c3c',
@@ -277,7 +279,7 @@ export default function UploadPage() {
                   }}
                   transition="all 0.2s"
                 >
-                  업로드할 파일 선택
+                  영상 선택
                 </Button>
               </label>
               {videoFile && (
@@ -301,7 +303,7 @@ export default function UploadPage() {
           {/* handedness 선택 버튼 추가 */}
           <Box mb={3}>
 
-            <HStack spacing={4} alignItems="center" justify={"center"}>
+            <HStack spacing={3} alignItems="start" justify={"start"}>
               <Button
                 bg={handedness === 'left' ? '#f33c3c' : 'transparent'}
                 color={handedness === 'left' ? 'black' : '#f33c3c'}
@@ -309,6 +311,7 @@ export default function UploadPage() {
                 fontWeight={600}
                 fontSize="12px"
                 borderRadius="full"
+                width="20"
                 padding="4px 12px"
                 onClick={() => handleHandednessChange('left')}
                 _hover={{
@@ -327,6 +330,7 @@ export default function UploadPage() {
                 fontWeight={600}
                 fontSize="12px"
                 borderRadius="full"
+                width="20"
                 padding="4px 12px"
                 onClick={() => handleHandednessChange('right')}
                 _hover={{
