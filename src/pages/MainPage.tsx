@@ -390,16 +390,16 @@ export default function MainPage() {
                       />
                       
                       <Box ml={1} mb={5} display="flex" flexDirection="row" alignItems="center" mt={2}>
-                      {shot.newUrl === null ? (
-                        <Text
-                          textColor="#f33c3c"
-                          fontFamily="Noto Sans KR"
-                          fontWeight={700}
-                          fontSize={22}
-                        >
-                          슛 폼이 검출되지 않음
-                        </Text>
-                      ) : hasNewUrl ? (
+                      {shot.newUrl === null && shot.processed !== null ? (
+                          <Text
+                            textColor="#f33c3c"
+                            fontFamily="Noto Sans KR"
+                            fontWeight={700}
+                            fontSize={22}
+                          >
+                            슛 폼이 검출되지 않음
+                          </Text>
+                        ) : hasNewUrl ? (
                           <>
                             <Text textColor="#f33c3c" fontSize={35}>
                               {shot.score !== null ? shot.score.toFixed(2) : '0.00'}
