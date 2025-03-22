@@ -21,6 +21,7 @@ Beyond The Rim은 직접 개발한 AI 모델을 사용하여, 사용자의 슛 �
 농구공 트래킹 모델의 학습 결과 그래프
 
 제작한 모델을 이용해서 농구공을 트래킹함으로써 실제 프로 농구 선수들의 슈팅 여부를 인식하고, Google의 MediaPipe 프레임워크에서 제공하는 인체 자세 추정 솔루션인 MediaPipe Pose를 이용해서 인체의 포즈 랜드마크 데이터를 뽑아냅니다. 이후, 인코더-LSTM-디코더 구조를 가진 저희의 딥러닝 기반의 자세 분석 모델에 이 랜드마크 데이터를 학습시킵니다. 
+<img width="850" alt="images-jaehyeong-post-d75d742b-9f88-4377-b4e7-56ffeae53386-autoencoder-architecture" src="https://github.com/user-attachments/assets/c8f80241-c687-4a7d-a466-556a457658f9" />
 
 User input data가 들어오게 되면, 이를 모델에 적용해서 재구성하고, 가장 효과적인 슈팅 폼으로 다시 탄생시킵니다. 
 
@@ -66,45 +67,8 @@ https://github.com/user-attachments/assets/47f3d03a-3620-49c1-879a-d5ab33afae9f
 총점의 나머지 50프로는 자체 판별 기준을 통해서 책정합니다. 슈팅 과정에서 팔꿈치는 잘 펴져 힘을 잘 전달하는지, 손목은 잘 꺾여 슈팅의 방향성을 잘 유지하는지 측정합니다. 또한, 무릎과 팔꿈치가 펴지는 타이밍이 일치해 하체의 힘을 잘 전달하고 있는지 판단합니다. 양쪽 어깨는 수평으로 잘 정렬되어있는지, 팔의 각도가 높아서 슈팅의 포물선이 잘 그려질지를 판단합니다. 이와 같은 기준들에 대해서 가중치를 책정하여 총점을 판단하고 user들에게 효과적인 피드백을 제공합니다.
 
 # 💻Tech Stack
+<img width="697" alt="Screenshot 2025-03-22 at 16 18 12" src="https://github.com/user-attachments/assets/b87f6cc2-c7f4-451e-8c5f-c8dc55f40773" />
 
----
-
-> **Frontend**
-> 
-> 
-> React+Vite
-> 
-
-
-> **Backend**
-> 
-> 
-> node.js
-> 
-> Firebase Auth
-> 
-> Firestore DB
->
-> AWS S3
-
-
-> **MachineLearning API**
-> 
-> 
-> YOLO v8
-> 
-> MediaPipe
-
-
-> **배포**
-> 
-> 
-> AWS EC2
-> 
-> Vercel
-> 
-> Vercel
-> 
 
 
 # 👥Team
